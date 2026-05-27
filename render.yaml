@@ -4,7 +4,7 @@ services:
     runtime: static
     rootDir: app
     buildCommand: bash ./scripts/build_admin_web.sh
-    staticPublishPath: app/build/web
+    staticPublishPath: build/web
     routes:
       - type: rewrite
         source: /*
