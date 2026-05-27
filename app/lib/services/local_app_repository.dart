@@ -55,8 +55,12 @@ class LocalAppRepository implements AppRepository {
   Future<bool> loginAdmin(String email, String password) async {
     final existing = _data.admin;
     if (existing == null) return false;
-    return existing.email.trim().toLowerCase() == email.trim().toLowerCase() &&
-        existing.password == password;
+    final loginValue = email.trim().toLowerCase();
+    final storedEmail = existing.email.trim().toLowerCase();
+    final storedName = _data.organization.adminName.trim().toLowerCase();
+
+    return (storedEmail == loginValue || storedName == loginValue) &&
+        existing.password.trim() == password.trim();
   }
 
   @override

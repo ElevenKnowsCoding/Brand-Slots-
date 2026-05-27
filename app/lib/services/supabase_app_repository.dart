@@ -106,8 +106,13 @@ class SupabaseAppRepository implements AppRepository {
   Future<bool> loginAdmin(String email, String password) async {
     final config = await _db.from('app_config').select().maybeSingle();
     if (config == null) return false;
-    return config['admin_email'] == email.trim() &&
-        config['admin_password'] == password;
+    final loginValue = email.trim().toLowerCase();
+    final storedEmail = (config['admin_email'] as String? ?? '').trim().toLowerCase();
+    final storedName = (config['admin_name'] as String? ?? '').trim().toLowerCase();
+    final storedPassword = (config['admin_password'] as String? ?? '').trim();
+
+    return (storedEmail == loginValue || storedName == loginValue) &&
+        storedPassword == password.trim();
   }
 
   @override
