@@ -15,10 +15,12 @@ class AppController extends ChangeNotifier {
   bool _isReady = false;
   SessionMode _sessionMode = SessionMode.none;
   String? _activeScreenId;
+  String? _errorMessage;
   StreamSubscription<AppData>? _dataSubscription;
 
   AppData get data => _data;
   bool get isReady => _isReady;
+  String? get errorMessage => _errorMessage;
   bool get hasAdmin => _data.admin != null;
   bool get isCloudBacked => _repository.isCloudBacked;
   String get backendLabel => _repository.backendLabel;
@@ -31,15 +33,21 @@ class AppController extends ChangeNotifier {
       _activeScreenId == null ? null : getScreenById(_activeScreenId!);
 
   Future<void> initialize() async {
-    await _repository.initialize();
-    _data = await _repository.loadInitialData();
-    _dataSubscription?.cancel();
-    _dataSubscription = _repository.watchAppData().listen((data) {
-      _data = data;
+    try {
+      _errorMessage = null;
+      await _repository.initialize();
+      _data = await _repository.loadInitialData();
+      await _dataSubscription?.cancel();
+      _dataSubscription = _repository.watchAppData().listen((data) {
+        _data = data;
+        notifyListeners();
+      });
+    } catch (error) {
+      _errorMessage = error.toString();
+    } finally {
+      _isReady = true;
       notifyListeners();
-    });
-    _isReady = true;
-    notifyListeners();
+    }
   }
 
   Future<void> createAdmin({
@@ -48,19 +56,23 @@ class AppController extends ChangeNotifier {
     required String password,
     required String companyName,
   }) async {
+    _errorMessage = null;
     await _repository.createAdmin(
       name: name,
       email: email,
       password: password,
       companyName: companyName,
     );
+    _data = await _repository.loadInitialData();
     _sessionMode = SessionMode.admin;
     notifyListeners();
   }
 
   Future<bool> loginAdmin(String email, String password) async {
+    _errorMessage = null;
     final success = await _repository.loginAdmin(email, password);
     if (!success) return false;
+    _data = await _repository.loadInitialData();
     _sessionMode = SessionMode.admin;
     _activeScreenId = null;
     notifyListeners();

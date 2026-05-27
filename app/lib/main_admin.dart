@@ -64,6 +64,33 @@ class _AdminConsoleAppState extends State<AdminConsoleApp> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
+    if (controller.errorMessage != null) {
+      return Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 720),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'App failed to load',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 12),
+                  SelectableText(
+                    controller.errorMessage!,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     if (controller.sessionMode == SessionMode.admin) {
       return AdminDashboardPage(controller: controller);
     }

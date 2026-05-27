@@ -45,25 +45,43 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
       _error = null;
     });
 
-    if (_isSetup) {
-      await widget.controller.createAdmin(
-        name: _nameController.text,
-        email: _emailController.text,
-        password: _passwordController.text,
-        companyName: _companyController.text,
-      );
-    } else {
-      final success = await widget.controller.loginAdmin(
-        _emailController.text,
-        _passwordController.text,
-      );
-      if (!success) {
-        setState(() {
-          _error = 'Invalid email or password.';
-          _isBusy = false;
-        });
-        return;
+    try {
+      if (_isSetup) {
+        await widget.controller.createAdmin(
+          name: _nameController.text,
+          email: _emailController.text,
+          password: _passwordController.text,
+          companyName: _companyController.text,
+        );
+      } else {
+        final success = await widget.controller.loginAdmin(
+          _emailController.text,
+          _passwordController.text,
+        );
+        if (!success) {
+          setState(() {
+            _error = 'Invalid email or password.';
+            _isBusy = false;
+          });
+          return;
+        }
       }
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _error = error.toString();
+        _isBusy = false;
+      });
+      return;
+    }
+
+    if (widget.controller.errorMessage != null) {
+      if (!mounted) return;
+      setState(() {
+        _error = widget.controller.errorMessage;
+        _isBusy = false;
+      });
+      return;
     }
 
     if (mounted) {
