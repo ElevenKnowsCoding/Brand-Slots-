@@ -16,10 +16,6 @@ class SupabaseAppRepository implements AppRepository {
   List<ScreenDevice> _screens = const [];
   List<MediaItem> _mediaItems = const [];
 
-  RealtimeChannel? _configChannel;
-  RealtimeChannel? _screensChannel;
-  RealtimeChannel? _mediaChannel;
-
   SupabaseClient get _db => Supabase.instance.client;
 
   @override
@@ -292,22 +288,21 @@ class SupabaseAppRepository implements AppRepository {
   }
 
   void _bindStreams() {
-    _configChannel = _db
+    _db
         .channel('app_config')
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
           schema: 'public',
           table: 'app_config',
           callback: (_) async {
-            final config =
-                await _db.from('app_config').select().maybeSingle();
+            final config = await _db.from('app_config').select().maybeSingle();
             if (config != null) _organization = _orgFromRow(config);
             _emit();
           },
         )
         .subscribe();
 
-    _screensChannel = _db
+    _db
         .channel('screens')
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
@@ -322,7 +317,7 @@ class SupabaseAppRepository implements AppRepository {
         )
         .subscribe();
 
-    _mediaChannel = _db
+    _db
         .channel('media_items')
         .onPostgresChanges(
           event: PostgresChangeEvent.all,

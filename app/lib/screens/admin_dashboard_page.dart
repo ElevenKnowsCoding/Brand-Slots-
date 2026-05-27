@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -1305,7 +1303,7 @@ class _PlayerSectionState extends State<_PlayerSection> {
         ),
         const SizedBox(height: 14),
         DropdownButtonFormField<MediaKind>(
-          value: _kind,
+          initialValue: _kind,
           decoration: const InputDecoration(labelText: 'Media type'),
           items: const [
             DropdownMenuItem(value: MediaKind.video, child: Text('Video')),

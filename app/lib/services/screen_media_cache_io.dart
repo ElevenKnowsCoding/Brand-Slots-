@@ -87,7 +87,7 @@ class IoScreenMediaCache implements ScreenMediaCache {
   Future<File?> _cachedFile(MediaItem item) async {
     final path = await _cachedFilePath(item);
     final file = File(path);
-    return file.exists() ? file : null;
+    return await file.exists() ? file : null;
   }
 
   Future<String> _cachedFilePath(MediaItem item) async {
