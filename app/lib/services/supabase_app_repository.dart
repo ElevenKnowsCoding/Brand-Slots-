@@ -37,7 +37,7 @@ class SupabaseAppRepository implements AppRepository {
   @override
   Future<AppData> loadInitialData() async {
     try {
-      final config = await _db.from('app_config').select().maybeSingle();
+      final config = await _ensureAppConfig();
       final screens = await _db.from('screens').select();
       final media = await _db.from('media_items').select().order('created_at');
 
@@ -104,7 +104,7 @@ class SupabaseAppRepository implements AppRepository {
 
   @override
   Future<bool> loginAdmin(String email, String password) async {
-    final config = await _db.from('app_config').select().maybeSingle();
+    final config = await _ensureAppConfig();
     if (config == null) return false;
     final loginValue = email.trim().toLowerCase();
     final storedEmail = (config['admin_email'] as String? ?? '').trim().toLowerCase();
@@ -113,6 +113,29 @@ class SupabaseAppRepository implements AppRepository {
 
     return (storedEmail == loginValue || storedName == loginValue) &&
         storedPassword == password.trim();
+  }
+
+  Future<Map<String, dynamic>?> _ensureAppConfig() async {
+    final existing = await _db.from('app_config').select().maybeSingle();
+    if (existing != null) return existing;
+
+    final defaults = {
+      'id': 'singleton',
+      'company_name': 'Brand Slots',
+      'admin_name': 'Admin',
+      'admin_email': 'admin@brandslots.com',
+      'admin_password': 'admin123',
+      'phone': '',
+      'welcome_message': 'No content has been assigned yet.',
+      'logo_url': '',
+      'accent_color_hex': '#0F766E',
+      'apk_base_url': '',
+      'local_project_path': '',
+    };
+
+    await _db.from('app_config').upsert(defaults);
+    final created = await _db.from('app_config').select().maybeSingle();
+    return created ?? defaults;
   }
 
   @override
