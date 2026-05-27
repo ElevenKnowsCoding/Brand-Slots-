@@ -10,7 +10,7 @@ ThemeData buildAppTheme() {
   );
 
   return base.copyWith(
-    scaffoldBackgroundColor: const Color(0xFFF4F7F5),
+    scaffoldBackgroundColor: const Color(0xFFF6F8FC),
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.transparent,
       foregroundColor: Color(0xFF122B28),
@@ -26,17 +26,35 @@ ThemeData buildAppTheme() {
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: Colors.white,
+      hintStyle: const TextStyle(color: Color(0xFF93A1B7)),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Color(0xFFD4E4DE)),
+        borderSide: const BorderSide(color: Color(0xFFE1E8F3)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Color(0xFFD4E4DE)),
+        borderSide: const BorderSide(color: Color(0xFFE1E8F3)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Color(0xFF0F766E), width: 1.4),
+        borderSide: const BorderSide(color: Color(0xFF3268F5), width: 1.4),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: const Color(0xFF171B22),
+        side: const BorderSide(color: Color(0xFFE2E8F3)),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+    ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        backgroundColor: const Color(0xFF171B22),
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(

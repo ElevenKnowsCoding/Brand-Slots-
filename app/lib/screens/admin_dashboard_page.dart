@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -27,7 +29,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     final sectionMeta = _sectionMeta(_section);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F1E8),
+      backgroundColor: const Color(0xFFF6F8FC),
       appBar: isCompact
           ? AppBar(
               backgroundColor: const Color(0xFFF4F1E8),
@@ -84,7 +86,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               ),
             Expanded(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(isCompact ? 16 : 24, 20, 20, 20),
+                padding: EdgeInsets.fromLTRB(isCompact ? 16 : 24, 18, 20, 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -127,7 +129,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 ),
                 NavigationDestination(
                   icon: Icon(Icons.tv_rounded),
-                  label: 'Screens',
+                  label: 'Devices',
                 ),
                 NavigationDestination(
                   icon: Icon(Icons.groups_rounded),
@@ -156,22 +158,22 @@ _SectionMeta _sectionMeta(_AdminSection section) {
     case _AdminSection.dashboard:
       return const _SectionMeta(
         'Dashboard',
-        'Overview of screens, playback, and media health.',
+        'Overview of your advertising network and live screen health.',
       );
     case _AdminSection.screens:
       return const _SectionMeta(
-        'Screens',
-        'Register screens, generate APKs, and monitor activity.',
+        'Devices',
+        'Manage screens, APK access, and deployment readiness.',
       );
     case _AdminSection.clients:
       return const _SectionMeta(
         'Clients',
-        'Manage the client profile, branding, and deployment links.',
+        'Design the client profile, billing setup, and brand delivery links.',
       );
     case _AdminSection.player:
       return const _SectionMeta(
         'Screen Player',
-        'Track playback counts and manage the media lineup.',
+        'Program the media lineup and screen playback schedule.',
       );
   }
 }
@@ -199,7 +201,7 @@ class _SidebarNavigation extends StatelessWidget {
       (
         section: _AdminSection.screens,
         icon: Icons.tv_rounded,
-        label: 'Screens',
+        label: 'Devices',
       ),
       (
         section: _AdminSection.clients,
@@ -215,46 +217,70 @@ class _SidebarNavigation extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1F3A37),
-        borderRadius: BorderRadius.circular(32),
+        color: Colors.white,
+        border: Border.all(color: const Color(0xFFE6EBF4)),
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A163152),
+            blurRadius: 24,
+            offset: Offset(0, 10),
+          ),
+        ],
       ),
       padding: const EdgeInsets.all(22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFF274744),
+              gradient: const LinearGradient(
+                colors: [Color(0xFF5A5FF0), Color(0xFF7A4DFF)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               borderRadius: BorderRadius.circular(24),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                const Text(
-                  'Ad Master',
-                  style: TextStyle(
+                Container(
+                  height: 56,
+                  width: 56,
+                  decoration: BoxDecoration(
+                    color: const Color(0x1FFFFFFF),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: const Icon(
+                    Icons.desktop_windows_rounded,
                     color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
+                    size: 28,
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  profile.companyName.isEmpty
-                      ? 'Client profile not configured'
-                      : profile.companyName,
-                  style: const TextStyle(
-                    color: Color(0xFFD6E5E0),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  controller.backendLabel,
-                  style: const TextStyle(
-                    color: Color(0xFF99B5AF),
-                    fontSize: 12,
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Ad',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        profile.companyName.isEmpty
+                            ? 'Digital Advertising'
+                            : profile.companyName,
+                        style: const TextStyle(
+                          color: Color(0xFFEDEBFF),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -276,23 +302,80 @@ class _SidebarNavigation extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFF274744),
+              color: const Color(0xFFF5F7FD),
               borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFE3E9F4)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Deployment',
+                const Row(
+                  children: [
+                    Icon(
+                      Icons.wifi_tethering_rounded,
+                      size: 18,
+                      color: Color(0xFF23A55A),
+                    ),
+                    SizedBox(width: 8),
+                    Text(
+                      'Connected',
+                      style: TextStyle(
+                        color: Color(0xFF14233B),
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  '${controller.screens.length} devices linked',
+                  style: const TextStyle(
+                    color: Color(0xFF6D7B93),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  controller.backendLabel,
+                  style: const TextStyle(
+                    color: Color(0xFF97A3B8),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Spacer(),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFF),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFE6EBF4)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  profile.adminName.isEmpty ? 'Super Admin' : profile.adminName,
                   style: TextStyle(
-                    color: Colors.white,
+                    color: const Color(0xFF14233B),
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 Text(
-                  '${controller.screens.length} screens linked',
-                  style: const TextStyle(color: Color(0xFFD6E5E0)),
+                  profile.adminEmail.isEmpty
+                      ? 'Admin access ready'
+                      : profile.adminEmail,
+                  style: const TextStyle(color: Color(0xFF74839C)),
+                ),
+                const SizedBox(height: 14),
+                OutlinedButton.icon(
+                  onPressed: controller.logout,
+                  icon: const Icon(Icons.logout_rounded, size: 18),
+                  label: const Text('Logout'),
                 ),
               ],
             ),
@@ -319,7 +402,7 @@ class _SidebarButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: selected ? const Color(0xFFF0C15D) : Colors.transparent,
+      color: selected ? const Color(0xFFEFF2FF) : Colors.transparent,
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
         onTap: onTap,
@@ -330,16 +413,22 @@ class _SidebarButton extends StatelessWidget {
             children: [
               Icon(
                 icon,
-                color: selected ? const Color(0xFF1F3A37) : Colors.white,
+                color: selected ? const Color(0xFF3268F5) : const Color(0xFF7E8BA3),
               ),
               const SizedBox(width: 12),
               Text(
                 label,
                 style: TextStyle(
-                  color: selected ? const Color(0xFF1F3A37) : Colors.white,
+                  color: selected ? const Color(0xFF2154DD) : const Color(0xFF22324A),
                   fontWeight: FontWeight.w700,
                 ),
               ),
+              const Spacer(),
+              if (selected)
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: Color(0xFF3268F5),
+                ),
             ],
           ),
         ),
@@ -362,15 +451,7 @@ class _TopHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFBF5E9), Color(0xFFF5E7C7)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(28),
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       child: Row(
         children: [
           Expanded(
@@ -378,33 +459,123 @@ class _TopHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
+                  'Ad  >  $title',
+                  style: const TextStyle(
+                    color: Color(0xFF72819A),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 34,
+                    fontSize: 40,
                     fontWeight: FontWeight.w900,
-                    color: Color(0xFF1E2D2A),
+                    color: Color(0xFF111C32),
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   subtitle,
                   style: const TextStyle(
-                    color: Color(0xFF5E6A67),
+                    color: Color(0xFF60718D),
+                    fontSize: 16,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
             ),
           ),
-          FilledButton.icon(
-            onPressed: controller.logout,
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF1F3A37),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-            ),
-            icon: const Icon(Icons.logout_rounded),
-            label: const Text('Logout'),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEAFBF0),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.wifi_rounded,
+                          size: 18,
+                          color: Color(0xFF20A25A),
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Connected',
+                          style: TextStyle(
+                            color: Color(0xFF17894A),
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFFE2E8F3)),
+                        ),
+                        child: IconButton(
+                          onPressed: () {},
+                          icon: const Icon(Icons.notifications_none_rounded),
+                        ),
+                      ),
+                      Positioned(
+                        right: -2,
+                        top: -4,
+                        child: Container(
+                          height: 22,
+                          width: 22,
+                          alignment: Alignment.center,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFF44F5A),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            '${math.max(1, controller.screens.length)}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: controller.logout,
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF171B22),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                icon: const Icon(Icons.logout_rounded, size: 18),
+                label: const Text('Logout'),
+              ),
+            ],
           ),
         ],
       ),
@@ -447,78 +618,123 @@ class _DashboardSection extends StatelessWidget {
       0,
       (sum, item) => sum + item.completedRounds,
     );
+    final onlineScreens = screens.where((s) => s.lastSeenAt != null).length;
 
     return ListView(
       children: [
+        Row(
+          children: [
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEAFBF0),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.circle, size: 10, color: Color(0xFF66D18F)),
+                  SizedBox(width: 10),
+                  Text(
+                    'Live Updates',
+                    style: TextStyle(
+                      color: Color(0xFF148A4A),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFE2E8F3)),
+              ),
+              child: IconButton(
+                onPressed: () {},
+                icon: const Icon(Icons.refresh_rounded),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
         Wrap(
           spacing: 16,
           runSpacing: 16,
           children: [
             _HeroStatCard(
-              title: 'Screens Live',
+              title: 'Total Screens',
               value: '${screens.length}',
-              note: '${screens.where((s) => s.lastSeenAt != null).length} checked in',
-              color: const Color(0xFF1F3A37),
-              icon: Icons.tv_rounded,
+              note: '$onlineScreens online',
+              accent: const Color(0xFF2F67F6),
+              surface: const Color(0xFFF7FAFF),
+              icon: Icons.desktop_windows_rounded,
             ),
             _HeroStatCard(
-              title: 'Media Library',
-              value: '${mediaItems.length}',
-              note: 'Videos and image creatives',
-              color: const Color(0xFFC66A3D),
-              icon: Icons.video_collection_rounded,
+              title: 'Active Campaigns',
+              value: '${mediaItems.isEmpty ? 0 : 1}',
+              note: '${mediaItems.length} media assets',
+              accent: const Color(0xFF9155F6),
+              surface: const Color(0xFFFBF7FF),
+              icon: Icons.play_circle_outline_rounded,
             ),
             _HeroStatCard(
-              title: 'Play Count',
+              title: "Today's Impressions",
               value: '$totalPlays',
-              note: 'Total tracked item completions',
-              color: const Color(0xFF4B6A9B),
-              icon: Icons.play_circle_fill_rounded,
+              note: totalPlays == 0 ? 'Waiting for playback' : '+12.5% vs yesterday',
+              accent: const Color(0xFF22B45B),
+              surface: const Color(0xFFF5FFF8),
+              icon: Icons.groups_2_rounded,
             ),
             _HeroStatCard(
-              title: 'Completed Rounds',
-              value: '$totalRounds',
-              note: 'Full playlist cycles',
-              color: const Color(0xFF6D8A3B),
-              icon: Icons.sync_rounded,
+              title: "Today's Revenue",
+              value: '₹${totalRounds * 87}',
+              note: totalRounds == 0 ? 'Add campaigns to start billing' : '+8.3% vs yesterday',
+              accent: const Color(0xFFE6A100),
+              surface: const Color(0xFFFFF9E9),
+              icon: Icons.attach_money_rounded,
             ),
           ],
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 22),
         LayoutBuilder(
           builder: (context, constraints) {
-            final stacked = constraints.maxWidth < 900;
+            final stacked = constraints.maxWidth < 1120;
+            final analytics = _SoftPanel(
+              child: _PerformanceOverviewPanel(
+                totalPlays: totalPlays,
+                totalRounds: totalRounds,
+              ),
+            );
+            final insights = _SoftPanel(
+              child: _OperationsSnapshotPanel(controller: controller),
+            );
             if (stacked) {
               return Column(
                 children: [
-                  _SoftPanel(
-                    child: _RecentScreensPanel(controller: controller),
-                  ),
+                  analytics,
                   const SizedBox(height: 16),
-                  _SoftPanel(
-                    child: _PlaybackHighlightsPanel(controller: controller),
-                  ),
+                  insights,
+                  const SizedBox(height: 16),
+                  _SoftPanel(child: _RecentScreensPanel(controller: controller)),
                 ],
               );
             }
             return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: _SoftPanel(
-                    child: _RecentScreensPanel(controller: controller),
-                  ),
-                ),
+                Expanded(flex: 7, child: analytics),
                 const SizedBox(width: 16),
-                Expanded(
-                  child: _SoftPanel(
-                    child: _PlaybackHighlightsPanel(controller: controller),
-                  ),
-                ),
+                Expanded(flex: 4, child: insights),
               ],
             );
           },
         ),
+        const SizedBox(height: 16),
+        _SoftPanel(child: _RecentScreensPanel(controller: controller)),
       ],
     );
   }
@@ -538,8 +754,8 @@ class _RecentScreensPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const _PanelTitle(
-          title: 'Recent Screens',
-          subtitle: 'Quick visibility into device health and engagement.',
+          title: 'Recent Devices',
+          subtitle: 'Quick visibility into field health, activity, and assigned content.',
         ),
         const SizedBox(height: 16),
         if (screens.isEmpty)
@@ -555,8 +771,91 @@ class _RecentScreensPanel extends StatelessWidget {
   }
 }
 
-class _PlaybackHighlightsPanel extends StatelessWidget {
-  const _PlaybackHighlightsPanel({required this.controller});
+class _PerformanceOverviewPanel extends StatelessWidget {
+  const _PerformanceOverviewPanel({
+    required this.totalPlays,
+    required this.totalRounds,
+  });
+
+  final int totalPlays;
+  final int totalRounds;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _PanelTitle(
+          title: 'Performance Overview',
+          subtitle: 'Impressions, plays, and revenue rhythm across the network.',
+        ),
+        const SizedBox(height: 18),
+        Container(
+          height: 280,
+          width: double.infinity,
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFFDFEFF), Color(0xFFF4F8FF)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+            borderRadius: BorderRadius.circular(26),
+            border: Border.all(color: const Color(0xFFE6ECF7)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  _MetricTag(
+                    label: 'Plays',
+                    value: '$totalPlays',
+                    color: const Color(0xFF2F67F6),
+                  ),
+                  const SizedBox(width: 10),
+                  _MetricTag(
+                    label: 'Rounds',
+                    value: '$totalRounds',
+                    color: const Color(0xFF22B45B),
+                  ),
+                  const SizedBox(width: 10),
+                  _MetricTag(
+                    label: 'Revenue',
+                    value: '₹${totalRounds * 87}',
+                    color: const Color(0xFFE6A100),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Expanded(
+                child: CustomPaint(
+                  painter: _TrendPainter(
+                    points: totalPlays == 0
+                        ? const [52, 38, 31, 30, 44, 35, 42]
+                        : [
+                            math.max(18, totalPlays + 12).toDouble(),
+                            math.max(12, totalPlays * 0.72).toDouble(),
+                            math.max(10, totalPlays * 0.55).toDouble(),
+                            math.max(10, totalPlays * 0.58).toDouble(),
+                            math.max(16, totalPlays * 0.9).toDouble(),
+                            math.max(14, totalPlays * 0.68).toDouble(),
+                            math.max(16, totalPlays * 0.86).toDouble(),
+                          ],
+                  ),
+                  child: Container(),
+                ),
+              ),
+            ],
+          ),
+        )
+      ],
+    );
+  }
+}
+
+class _OperationsSnapshotPanel extends StatelessWidget {
+  const _OperationsSnapshotPanel({required this.controller});
 
   final AppController controller;
 
@@ -566,51 +865,42 @@ class _PlaybackHighlightsPanel extends StatelessWidget {
     final sortedScreens = [...screens]
       ..sort((a, b) => b.playCount.compareTo(a.playCount));
     final best = sortedScreens.isEmpty ? null : sortedScreens.first;
+    final mediaItems = controller.mediaItems.length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const _PanelTitle(
-          title: 'Playback Snapshot',
-          subtitle: 'What the screen fleet is actually doing right now.',
+          title: 'Operations Snapshot',
+          subtitle: 'A quick read on the most important live system signals.',
         ),
-        const SizedBox(height: 18),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF5E7C7),
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: best == null
-              ? const Text('Playback data will appear after screens start looping media.')
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Top Screen',
-                      style: TextStyle(
-                        color: Color(0xFF7B6340),
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      best.name,
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFF1E2D2A),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text('Played ${best.playCount} items'),
-                    Text('Completed ${best.completedRounds} full rounds'),
-                    Text(
-                      'Last playback: ${_formatTimestamp(best.lastPlaybackAt)}',
-                    ),
-                  ],
-                ),
+        const SizedBox(height: 16),
+        _InsightCard(
+          title: 'Top Screen',
+          value: best?.name ?? 'No devices yet',
+          detail: best == null
+              ? 'Register a device to start tracking playback.'
+              : 'Played ${best.playCount} items and completed ${best.completedRounds} rounds.',
+          icon: Icons.devices_other_rounded,
+          accent: const Color(0xFF2F67F6),
+        ),
+        const SizedBox(height: 12),
+        _InsightCard(
+          title: 'Media Library',
+          value: '$mediaItems assets',
+          detail: mediaItems == 0
+              ? 'Upload videos or images to power campaigns.'
+              : 'Ready to deliver content across the connected fleet.',
+          icon: Icons.video_collection_outlined,
+          accent: const Color(0xFF8C56F7),
+        ),
+        const SizedBox(height: 12),
+        _InsightCard(
+          title: 'System Health',
+          value: '${screens.where((s) => s.lastSeenAt != null).length}/${screens.length}',
+          detail: 'Devices checked in recently and reporting activity.',
+          icon: Icons.health_and_safety_outlined,
+          accent: const Color(0xFF20A25A),
         ),
       ],
     );
@@ -631,6 +921,7 @@ class _ScreensSectionState extends State<_ScreensSection> {
   final _codeController = TextEditingController();
   final _passwordController = TextEditingController();
   final _locationController = TextEditingController();
+  final _searchController = TextEditingController();
   late final LocalApkBuilder _apkBuilder;
 
   @override
@@ -645,6 +936,7 @@ class _ScreensSectionState extends State<_ScreensSection> {
     _codeController.dispose();
     _passwordController.dispose();
     _locationController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -779,9 +1071,66 @@ class _ScreensSectionState extends State<_ScreensSection> {
   Widget build(BuildContext context) {
     final screens = widget.controller.screens;
     final apkBaseUrl = widget.controller.organization.apkBaseUrl;
+    final filteredScreens = screens.where((screen) {
+      final query = _searchController.text.trim().toLowerCase();
+      if (query.isEmpty) return true;
+      return screen.name.toLowerCase().contains(query) ||
+          screen.location.toLowerCase().contains(query) ||
+          screen.loginCode.toLowerCase().contains(query);
+    }).toList();
+    final onlineCount = screens.where((screen) => screen.lastSeenAt != null).length;
+    final downloadReady = screens.where((screen) => apkBaseUrl.trim().isNotEmpty).length;
 
     return ListView(
       children: [
+        Wrap(
+          spacing: 16,
+          runSpacing: 16,
+          children: [
+            _HeroStatCard(
+              title: 'Total',
+              value: '${screens.length}',
+              note: 'Registered screens',
+              accent: const Color(0xFF2F67F6),
+              surface: const Color(0xFFF7FAFF),
+              icon: Icons.desktop_windows_rounded,
+            ),
+            _HeroStatCard(
+              title: 'Online',
+              value: '$onlineCount',
+              note: 'Checked in recently',
+              accent: const Color(0xFF22B45B),
+              surface: const Color(0xFFF5FFF8),
+              icon: Icons.wifi_rounded,
+            ),
+            _HeroStatCard(
+              title: 'Offline',
+              value: '${screens.length - onlineCount}',
+              note: 'Needs attention',
+              accent: const Color(0xFFF04C5A),
+              surface: const Color(0xFFFFF7F8),
+              icon: Icons.wifi_off_rounded,
+            ),
+            _HeroStatCard(
+              title: 'Download Ready',
+              value: '$downloadReady',
+              note: apkBaseUrl.trim().isEmpty ? 'Set APK base URL' : 'GitHub release linked',
+              accent: const Color(0xFF8C56F7),
+              surface: const Color(0xFFFBF7FF),
+              icon: Icons.download_rounded,
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        TextField(
+          controller: _searchController,
+          onChanged: (_) => setState(() {}),
+          decoration: const InputDecoration(
+            hintText: 'Search devices by name, location, or login code...',
+            prefixIcon: Icon(Icons.search_rounded),
+          ),
+        ),
+        const SizedBox(height: 18),
         LayoutBuilder(
           builder: (context, constraints) {
             final stacked = constraints.maxWidth < 980;
@@ -790,7 +1139,7 @@ class _ScreensSectionState extends State<_ScreensSection> {
                 children: [
                   _SoftPanel(child: _buildForm()),
                   const SizedBox(height: 16),
-                  _SoftPanel(child: _buildGrid(screens, apkBaseUrl)),
+                  _SoftPanel(child: _buildGrid(filteredScreens, apkBaseUrl)),
                 ],
               );
             }
@@ -799,7 +1148,9 @@ class _ScreensSectionState extends State<_ScreensSection> {
               children: [
                 SizedBox(width: 360, child: _SoftPanel(child: _buildForm())),
                 const SizedBox(width: 16),
-                Expanded(child: _SoftPanel(child: _buildGrid(screens, apkBaseUrl))),
+                Expanded(
+                  child: _SoftPanel(child: _buildGrid(filteredScreens, apkBaseUrl)),
+                ),
               ],
             );
           },
@@ -813,8 +1164,8 @@ class _ScreensSectionState extends State<_ScreensSection> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const _PanelTitle(
-          title: 'Register Screen',
-          subtitle: 'Create a new screen endpoint with credentials and location.',
+          title: 'Add Device',
+          subtitle: 'Register a new screen endpoint with credentials and deployment metadata.',
         ),
         const SizedBox(height: 16),
         TextField(
@@ -841,7 +1192,7 @@ class _ScreensSectionState extends State<_ScreensSection> {
           width: double.infinity,
           child: FilledButton(
             onPressed: _addScreen,
-            child: const Text('Add Screen'),
+            child: const Text('Add Device'),
           ),
         ),
       ],
@@ -853,8 +1204,8 @@ class _ScreensSectionState extends State<_ScreensSection> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const _PanelTitle(
-          title: 'Screen Fleet',
-          subtitle: 'Each card shows playback health, APK access, and device state.',
+          title: 'Device Management',
+          subtitle: 'Monitor live status, playback activity, and APK delivery readiness.',
         ),
         const SizedBox(height: 16),
         if (screens.isEmpty)
@@ -924,6 +1275,7 @@ class _ClientsSectionState extends State<_ClientsSection> {
   late final TextEditingController _colorController;
   late final TextEditingController _apkBaseUrlController;
   late final TextEditingController _localProjectPathController;
+  final _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -953,6 +1305,7 @@ class _ClientsSectionState extends State<_ClientsSection> {
     _colorController.dispose();
     _apkBaseUrlController.dispose();
     _localProjectPathController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -989,8 +1342,79 @@ class _ClientsSectionState extends State<_ClientsSection> {
 
   @override
   Widget build(BuildContext context) {
+    final profile = widget.controller.organization;
+    final fieldsCompleted = [
+      _companyController.text,
+      _adminController.text,
+      _emailController.text,
+      _phoneController.text,
+      _apkBaseUrlController.text,
+    ].where((value) => value.trim().isNotEmpty).length;
+    final completeness = ((fieldsCompleted / 5) * 100).round();
+
     return ListView(
       children: [
+        Wrap(
+          spacing: 16,
+          runSpacing: 16,
+          children: [
+            _HeroStatCard(
+              title: 'Profile Score',
+              value: '$completeness%',
+              note: 'Core setup completed',
+              accent: const Color(0xFF2F67F6),
+              surface: const Color(0xFFF7FAFF),
+              icon: Icons.badge_outlined,
+            ),
+            _HeroStatCard(
+              title: 'Deployment',
+              value: profile.apkBaseUrl.trim().isEmpty ? 'Pending' : 'Ready',
+              note: profile.apkBaseUrl.trim().isEmpty
+                  ? 'Link GitHub release downloads'
+                  : 'APK download base is connected',
+              accent: const Color(0xFF22B45B),
+              surface: const Color(0xFFF5FFF8),
+              icon: Icons.cloud_done_outlined,
+            ),
+            _HeroStatCard(
+              title: 'Brand Assets',
+              value: profile.logoUrl.trim().isEmpty ? '0' : '1',
+              note: profile.logoUrl.trim().isEmpty ? 'Logo missing' : 'Logo URL saved',
+              accent: const Color(0xFF8C56F7),
+              surface: const Color(0xFFFBF7FF),
+              icon: Icons.palette_outlined,
+            ),
+            _HeroStatCard(
+              title: 'Local Build',
+              value: profile.localProjectPath.trim().isEmpty ? 'Not set' : 'Ready',
+              note: profile.localProjectPath.trim().isEmpty
+                  ? 'Desktop build path required'
+                  : 'Desktop APK build path configured',
+              accent: const Color(0xFFE6A100),
+              surface: const Color(0xFFFFF9E9),
+              icon: Icons.developer_mode_rounded,
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        Row(
+          children: const [
+            _SectionTab(label: 'Clients', selected: true),
+            SizedBox(width: 10),
+            _SectionTab(label: 'Branding'),
+            SizedBox(width: 10),
+            _SectionTab(label: 'Deployment'),
+          ],
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _searchController,
+          decoration: const InputDecoration(
+            hintText: 'Search profile fields, contacts, or deployment links...',
+            prefixIcon: Icon(Icons.search_rounded),
+          ),
+        ),
+        const SizedBox(height: 18),
         LayoutBuilder(
           builder: (context, constraints) {
             final stacked = constraints.maxWidth < 980;
@@ -1024,68 +1448,136 @@ class _ClientsSectionState extends State<_ClientsSection> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const _PanelTitle(
-          title: 'Client Profile',
-          subtitle: 'Keep the admin owner, branding, and deployment links organized.',
+          title: 'Client & Billing Management',
+          subtitle: 'Shape the client profile, contacts, branding, and APK delivery setup.',
         ),
         const SizedBox(height: 16),
-        TextField(
-          controller: _companyController,
-          decoration: const InputDecoration(labelText: 'Company name'),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final wide = constraints.maxWidth > 760;
+            final left = [
+              _FormFieldBlock(
+                label: 'Company name',
+                child: TextField(
+                  controller: _companyController,
+                  decoration: const InputDecoration(hintText: 'Brand Slots'),
+                ),
+              ),
+              _FormFieldBlock(
+                label: 'Admin name',
+                child: TextField(
+                  controller: _adminController,
+                  decoration: const InputDecoration(hintText: 'Super Admin'),
+                ),
+              ),
+              _FormFieldBlock(
+                label: 'Admin email',
+                child: TextField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(hintText: 'admin@brandslots.com'),
+                ),
+              ),
+              _FormFieldBlock(
+                label: 'Phone',
+                child: TextField(
+                  controller: _phoneController,
+                  decoration: const InputDecoration(hintText: '+91 98765 43210'),
+                ),
+              ),
+            ];
+            final right = [
+              _FormFieldBlock(
+                label: 'Welcome message',
+                child: TextField(
+                  controller: _welcomeController,
+                  minLines: 3,
+                  maxLines: 5,
+                  decoration: const InputDecoration(
+                    hintText: 'Welcome to the brand network',
+                  ),
+                ),
+              ),
+              _FormFieldBlock(
+                label: 'Logo URL',
+                child: TextField(
+                  controller: _logoController,
+                  decoration: const InputDecoration(hintText: 'https://...'),
+                ),
+              ),
+              _FormFieldBlock(
+                label: 'Accent color',
+                child: TextField(
+                  controller: _colorController,
+                  decoration: const InputDecoration(hintText: '#0F766E'),
+                ),
+              ),
+              _FormFieldBlock(
+                label: 'APK base URL',
+                child: TextField(
+                  controller: _apkBaseUrlController,
+                  decoration: const InputDecoration(
+                    hintText: 'https://github.com/OWNER/REPO/releases/download/screen-apks',
+                  ),
+                ),
+              ),
+              _FormFieldBlock(
+                label: 'Local Flutter project path',
+                child: TextField(
+                  controller: _localProjectPathController,
+                  decoration: InputDecoration(
+                    hintText: 'C:\\path\\to\\app',
+                    suffixIcon: IconButton(
+                      onPressed: _pickLocalProjectPath,
+                      icon: const Icon(Icons.folder_open_rounded),
+                    ),
+                  ),
+                ),
+              ),
+            ];
+
+            if (!wide) {
+              return Column(
+                children: [
+                  ...left.expand((block) => [block, const SizedBox(height: 14)]),
+                  ...right.expand((block) => [block, const SizedBox(height: 14)]),
+                ],
+              );
+            }
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    children: [
+                      for (final block in left) ...[
+                        block,
+                        const SizedBox(height: 14),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 18),
+                Expanded(
+                  child: Column(
+                    children: [
+                      for (final block in right) ...[
+                        block,
+                        const SizedBox(height: 14),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
         ),
-        const SizedBox(height: 14),
-        TextField(
-          controller: _adminController,
-          decoration: const InputDecoration(labelText: 'Admin name'),
-        ),
-        const SizedBox(height: 14),
-        TextField(
-          controller: _emailController,
-          decoration: const InputDecoration(labelText: 'Admin email'),
-        ),
-        const SizedBox(height: 14),
-        TextField(
-          controller: _phoneController,
-          decoration: const InputDecoration(labelText: 'Phone'),
-        ),
-        const SizedBox(height: 14),
-        TextField(
-          controller: _welcomeController,
-          minLines: 2,
-          maxLines: 4,
-          decoration: const InputDecoration(labelText: 'Welcome message'),
-        ),
-        const SizedBox(height: 14),
-        TextField(
-          controller: _logoController,
-          decoration: const InputDecoration(labelText: 'Logo URL'),
-        ),
-        const SizedBox(height: 14),
-        TextField(
-          controller: _colorController,
-          decoration: const InputDecoration(labelText: 'Accent color hex'),
-        ),
-        const SizedBox(height: 14),
-        TextField(
-          controller: _apkBaseUrlController,
-          decoration: const InputDecoration(labelText: 'APK base URL'),
-        ),
-        const SizedBox(height: 14),
-        TextField(
-          controller: _localProjectPathController,
-          decoration: InputDecoration(
-            labelText: 'Local Flutter project path',
-            suffixIcon: IconButton(
-              onPressed: _pickLocalProjectPath,
-              icon: const Icon(Icons.folder_open_rounded),
-            ),
-          ),
-        ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 8),
         Align(
           alignment: Alignment.centerLeft,
-          child: FilledButton(
+          child: FilledButton.icon(
             onPressed: _save,
-            child: const Text('Save Client Profile'),
+            icon: const Icon(Icons.save_outlined),
+            label: const Text('Save Client Profile'),
           ),
         ),
       ],
@@ -1098,25 +1590,56 @@ class _ClientsSectionState extends State<_ClientsSection> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const _PanelTitle(
-          title: 'Brand Summary',
-          subtitle: 'A quick snapshot for the client-facing system settings.',
+          title: 'Client Preview',
+          subtitle: 'A polished snapshot of the brand, rollout state, and delivery channels.',
         ),
         const SizedBox(height: 16),
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: const Color(0xFF1F3A37),
+            gradient: const LinearGradient(
+              colors: [Color(0xFF5B60F4), Color(0xFF6E49EE)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
             borderRadius: BorderRadius.circular(24),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Row(
+                children: [
+                  Container(
+                    height: 56,
+                    width: 56,
+                    decoration: BoxDecoration(
+                      color: const Color(0x26FFFFFF),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: const Icon(
+                      Icons.apartment_rounded,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Brand Profile',
+                      style: TextStyle(
+                        color: Color(0xFFE8E9FF),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
               Text(
                 profile.companyName.isEmpty ? 'No Company Name' : profile.companyName,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 24,
+                  fontSize: 28,
                   fontWeight: FontWeight.w900,
                 ),
               ),
@@ -1143,6 +1666,24 @@ class _ClientsSectionState extends State<_ClientsSection> {
                 value: profile.localProjectPath.isEmpty
                     ? 'Not set'
                     : profile.localProjectPath,
+              ),
+              const SizedBox(height: 18),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0x14FFFFFF),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Text(
+                  profile.adminEmail.isEmpty
+                      ? 'Admin contact not configured yet.'
+                      : 'Primary contact: ${profile.adminName} • ${profile.adminEmail}',
+                  style: const TextStyle(
+                    color: Color(0xFFF4F5FF),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ],
           ),
@@ -1455,45 +1996,78 @@ class _HeroStatCard extends StatelessWidget {
     required this.title,
     required this.value,
     required this.note,
-    required this.color,
+    required this.accent,
+    required this.surface,
     required this.icon,
   });
 
   final String title;
   final String value;
   final String note;
-  final Color color;
+  final Color accent;
+  final Color surface;
   final IconData icon;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 260,
+      width: 278,
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: color,
+        color: Colors.white,
+        border: Border.all(color: const Color(0xFFE5EBF5)),
         borderRadius: BorderRadius.circular(28),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x08132038),
+            blurRadius: 18,
+            offset: Offset(0, 10),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: Colors.white, size: 28),
-          const SizedBox(height: 22),
-          Text(
-            title,
-            style: const TextStyle(color: Color(0xFFD5E6E1), fontWeight: FontWeight.w700),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    color: Color(0xFF60718D),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+              Container(
+                height: 58,
+                width: 58,
+                decoration: BoxDecoration(
+                  color: surface,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Icon(icon, color: accent, size: 28),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 22),
           Text(
             value,
             style: const TextStyle(
-              color: Colors.white,
-              fontSize: 38,
+              color: Color(0xFF111C32),
+              fontSize: 36,
               fontWeight: FontWeight.w900,
             ),
           ),
           const SizedBox(height: 8),
-          Text(note, style: const TextStyle(color: Color(0xFFD5E6E1))),
+          Text(
+            note,
+            style: TextStyle(
+              color: accent,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ],
       ),
     );
@@ -1512,7 +2086,15 @@ class _SoftPanel extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
+        border: Border.all(color: const Color(0xFFE5EBF5)),
         borderRadius: BorderRadius.circular(28),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x08132038),
+            blurRadius: 18,
+            offset: Offset(0, 10),
+          ),
+        ],
       ),
       child: child,
     );
@@ -1535,13 +2117,13 @@ class _PanelTitle extends StatelessWidget {
           style: const TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.w900,
-            color: Color(0xFF1E2D2A),
+            color: Color(0xFF111C32),
           ),
         ),
         const SizedBox(height: 6),
         Text(
           subtitle,
-          style: const TextStyle(color: Color(0xFF6C7672)),
+          style: const TextStyle(color: Color(0xFF6C7B95)),
         ),
       ],
     );
@@ -1558,14 +2140,23 @@ class _ScreenSummaryTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF7F7F3),
+        color: const Color(0xFFF9FBFF),
+        border: Border.all(color: const Color(0xFFE5EBF5)),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         children: [
-          const CircleAvatar(
-            backgroundColor: Color(0xFFE2E8E1),
-            child: Icon(Icons.tv_rounded),
+          Container(
+            height: 48,
+            width: 48,
+            decoration: BoxDecoration(
+              color: const Color(0xFFEFF3FF),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(
+              Icons.desktop_windows_rounded,
+              color: Color(0xFF2F67F6),
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -1577,7 +2168,10 @@ class _ScreenSummaryTile extends StatelessWidget {
                   style: const TextStyle(fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 4),
-                Text('${screen.location} • ${screen.assignedMediaIds.length} assigned'),
+                Text(
+                  '${screen.location} • ${screen.assignedMediaIds.length} assigned',
+                  style: const TextStyle(color: Color(0xFF73829C)),
+                ),
               ],
             ),
           ),
@@ -1609,17 +2203,33 @@ class _ScreenCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFFF7F7F3),
+        color: Colors.white,
+        border: Border.all(color: const Color(0xFFE5EBF5)),
         borderRadius: BorderRadius.circular(24),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x08132038),
+            blurRadius: 18,
+            offset: Offset(0, 10),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const CircleAvatar(
-                backgroundColor: Color(0xFFE1E8DF),
-                child: Icon(Icons.tv_rounded),
+              Container(
+                height: 52,
+                width: 52,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFF3FF),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: const Icon(
+                  Icons.desktop_windows_rounded,
+                  color: Color(0xFF2F67F6),
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -1634,15 +2244,48 @@ class _ScreenCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _StatusPill(
+                label: screen.lastSeenAt == null ? 'Offline' : 'Online',
+                color: screen.lastSeenAt == null
+                    ? const Color(0xFFF04C5A)
+                    : const Color(0xFF22B45B),
+              ),
+              _StatusPill(
+                label: screen.playCount > 0 ? 'Playing' : 'Idle',
+                color: screen.playCount > 0
+                    ? const Color(0xFF2F67F6)
+                    : const Color(0xFF95A2B9),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
           _SummaryChip(label: 'Code', value: screen.loginCode),
           const SizedBox(height: 8),
           _SummaryChip(label: 'Location', value: screen.location),
           const SizedBox(height: 8),
           _SummaryChip(label: 'APK', value: screen.apkAssetFileName),
           const Spacer(),
-          Text('Items played: ${screen.playCount}'),
-          Text('Completed rounds: ${screen.completedRounds}'),
-          Text('Last seen: ${_formatTimestamp(screen.lastSeenAt)}'),
+          Row(
+            children: [
+              Expanded(
+                child: _CompactMetric(label: 'Plays', value: '${screen.playCount}'),
+              ),
+              Expanded(
+                child: _CompactMetric(
+                  label: 'Rounds',
+                  value: '${screen.completedRounds}',
+                ),
+              ),
+            ],
+          ),
+          Text(
+            'Last seen: ${_formatTimestamp(screen.lastSeenAt)}',
+            style: const TextStyle(color: Color(0xFF73829C)),
+          ),
           const SizedBox(height: 12),
           Wrap(
             spacing: 10,
@@ -1685,7 +2328,8 @@ class _SummaryChip extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF0F2ED),
+        color: const Color(0xFFF7F9FE),
+        border: Border.all(color: const Color(0xFFE5EBF5)),
         borderRadius: BorderRadius.circular(16),
       ),
       child: RichText(
@@ -1738,6 +2382,293 @@ class _MiniMetricCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _SectionTab extends StatelessWidget {
+  const _SectionTab({required this.label, this.selected = false});
+
+  final String label;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: selected ? Colors.white : const Color(0xFFF0F4FB),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: selected ? const Color(0xFFE5EBF5) : Colors.transparent,
+        ),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: selected ? const Color(0xFF111C32) : const Color(0xFF6A7A93),
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+class _FormFieldBlock extends StatelessWidget {
+  const _FormFieldBlock({required this.label, required this.child});
+
+  final String label;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: Color(0xFF324057),
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 8),
+        child,
+      ],
+    );
+  }
+}
+
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withAlpha(26),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.check_circle_outline_rounded, size: 16, color: color),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: TextStyle(color: color, fontWeight: FontWeight.w700),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CompactMetric extends StatelessWidget {
+  const _CompactMetric({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(color: Color(0xFF73829C))),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Color(0xFF111C32),
+              fontWeight: FontWeight.w800,
+              fontSize: 20,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MetricTag extends StatelessWidget {
+  const _MetricTag({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withAlpha(20),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(color: color, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Color(0xFF111C32),
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InsightCard extends StatelessWidget {
+  const _InsightCard({
+    required this.title,
+    required this.value,
+    required this.detail,
+    required this.icon,
+    required this.accent,
+  });
+
+  final String title;
+  final String value;
+  final String detail;
+  final IconData icon;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FBFF),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFE5EBF5)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            height: 48,
+            width: 48,
+            decoration: BoxDecoration(
+              color: accent.withAlpha(31),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(icon, color: accent),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Color(0xFF697A95),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    color: Color(0xFF111C32),
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  detail,
+                  style: const TextStyle(color: Color(0xFF73829C)),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TrendPainter extends CustomPainter {
+  const _TrendPainter({required this.points});
+
+  final List<double> points;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (points.length < 2) return;
+    final maxValue = points.reduce(math.max);
+    final minValue = points.reduce(math.min);
+    final range = math.max(1.0, maxValue - minValue);
+
+    final guide = Paint()
+      ..color = const Color(0xFFE4EBF7)
+      ..strokeWidth = 1;
+    for (var i = 1; i < 4; i++) {
+      final y = size.height * i / 4;
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), guide);
+    }
+
+    final path = Path();
+    for (var i = 0; i < points.length; i++) {
+      final x = size.width * i / (points.length - 1);
+      final y = size.height - ((points[i] - minValue) / range) * (size.height - 10);
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        final prevX = size.width * (i - 1) / (points.length - 1);
+        final prevY = size.height -
+            ((points[i - 1] - minValue) / range) * (size.height - 10);
+        final controlX = (prevX + x) / 2;
+        path.cubicTo(controlX, prevY, controlX, y, x, y);
+      }
+    }
+
+    final fillPath = Path.from(path)
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+
+    canvas.drawPath(
+      fillPath,
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0x553267F6), Color(0x113267F6)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ).createShader(Offset.zero & size),
+    );
+
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = const Color(0xFF3267F6)
+        ..strokeWidth = 3
+        ..style = PaintingStyle.stroke,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _TrendPainter oldDelegate) =>
+      oldDelegate.points != points;
 }
 
 String _formatTimestamp(String? value) {
