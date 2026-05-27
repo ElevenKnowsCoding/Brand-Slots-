@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../state/app_controller.dart';
 import '../supabase_options.dart';
@@ -27,6 +28,13 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
   final _passwordController = TextEditingController();
   String? _error;
   bool _isBusy = false;
+  String? _debugAdminSummary;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDebugAdminSummary();
+  }
 
   @override
   void dispose() {
@@ -77,6 +85,31 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
     }
   }
 
+  Future<void> _loadDebugAdminSummary() async {
+    try {
+      final row = await Supabase.instance.client
+          .from('app_config')
+          .select('id, admin_name, admin_email')
+          .maybeSingle();
+      if (!mounted) return;
+      setState(() {
+        if (row == null) {
+          _debugAdminSummary = 'Debug: no app_config row found.';
+          return;
+        }
+        final adminName = (row['admin_name'] as String? ?? '').trim();
+        final adminEmail = (row['admin_email'] as String? ?? '').trim();
+        _debugAdminSummary =
+            'Debug: app_config found. admin_name="$adminName", admin_email="$adminEmail"';
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _debugAdminSummary = 'Debug: failed to read app_config: $error';
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -110,6 +143,13 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                       'Build: $_adminBuildVersion\nSupabase: ${SupabaseOptions.url}',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
+                    if (_debugAdminSummary != null) ...[
+                      const SizedBox(height: 12),
+                      SelectableText(
+                        _debugAdminSummary!,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
                     const SizedBox(height: 20),
                     TextFormField(
                       controller: _emailController,
