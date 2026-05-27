@@ -1247,18 +1247,18 @@ class _ScreensSectionState extends State<_ScreensSection> {
                   : width > 760
                   ? 2
                   : 1;
-              final childAspectRatio = width > 1200
-                  ? 1.18
+              final mainAxisExtent = width > 1200
+                  ? 430.0
                   : width > 760
-                  ? 1.0
-                  : 0.86;
+                  ? 450.0
+                  : 500.0;
               return GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: screens.length,
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: crossAxisCount,
-                  childAspectRatio: childAspectRatio,
+                  mainAxisExtent: mainAxisExtent,
                   crossAxisSpacing: 14,
                   mainAxisSpacing: 14,
                 ),
@@ -2263,6 +2263,8 @@ class _ScreenCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   screen.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
