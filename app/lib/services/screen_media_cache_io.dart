@@ -28,10 +28,7 @@ class IoScreenMediaCache implements ScreenMediaCache {
   @override
   Future<void> syncAssignedMedia(List<MediaItem> items) async {
     for (final item in items) {
-      if (_downloads.containsKey(item.id)) continue;
-      _downloads[item.id] = _downloadIfNeeded(item).whenComplete(() {
-        _downloads.remove(item.id);
-      });
+      _queueDownload(item);
     }
   }
 
@@ -55,7 +52,10 @@ class IoScreenMediaCache implements ScreenMediaCache {
 
   @override
   Future<PreparedMediaImage> prepareImage(MediaItem item) async {
-    final file = await _cachedFile(item);
+    final file = await _waitForCachedFile(
+      item,
+      timeout: const Duration(seconds: 2),
+    );
     if (file != null) {
       return PreparedMediaImage(
         provider: FileImage(file),
@@ -63,7 +63,7 @@ class IoScreenMediaCache implements ScreenMediaCache {
       );
     }
 
-    unawaited(_downloadIfNeeded(item));
+    unawaited(_queueDownload(item));
     return PreparedMediaImage(
       provider: NetworkImage(item.url),
       isCached: false,
@@ -72,22 +72,54 @@ class IoScreenMediaCache implements ScreenMediaCache {
 
   @override
   Future<VideoPlayerController> prepareVideoController(MediaItem item) async {
-    final file = await _cachedFile(item);
+    final file = await _waitForCachedFile(
+      item,
+      timeout: const Duration(seconds: 3),
+    );
     final controller = file != null
         ? VideoPlayerController.file(file)
         : VideoPlayerController.networkUrl(Uri.parse(item.url));
     await controller.initialize();
     await controller.setLooping(false);
     if (file == null) {
-      unawaited(_downloadIfNeeded(item));
+      unawaited(_queueDownload(item));
     }
     return controller;
+  }
+
+  Future<void> _queueDownload(MediaItem item) {
+    final existing = _downloads[item.id];
+    if (existing != null) {
+      return existing;
+    }
+
+    final future = _downloadIfNeeded(item).whenComplete(() {
+      _downloads.remove(item.id);
+    });
+    _downloads[item.id] = future;
+    return future;
   }
 
   Future<File?> _cachedFile(MediaItem item) async {
     final path = await _cachedFilePath(item);
     final file = File(path);
     return await file.exists() ? file : null;
+  }
+
+  Future<File?> _waitForCachedFile(
+    MediaItem item, {
+    required Duration timeout,
+  }) async {
+    final cached = await _cachedFile(item);
+    if (cached != null) {
+      return cached;
+    }
+
+    try {
+      await _queueDownload(item).timeout(timeout);
+    } catch (_) {}
+
+    return _cachedFile(item);
   }
 
   Future<String> _cachedFilePath(MediaItem item) async {

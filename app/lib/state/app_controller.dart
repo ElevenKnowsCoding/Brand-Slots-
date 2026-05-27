@@ -39,8 +39,11 @@ class AppController extends ChangeNotifier {
       _data = await _repository.loadInitialData();
       await _dataSubscription?.cancel();
       _dataSubscription = _repository.watchAppData().listen((data) {
+        final previous = _data;
         _data = data;
-        notifyListeners();
+        if (_shouldNotifyForIncomingData(previous, data)) {
+          notifyListeners();
+        }
       });
     } catch (error) {
       _errorMessage = error.toString();
@@ -186,6 +189,82 @@ class AppController extends ChangeNotifier {
 
   String? apkDownloadUrlForScreen(ScreenDevice screen) {
     return screen.apkDownloadUrl(_data.organization.apkBaseUrl);
+  }
+
+  bool _shouldNotifyForIncomingData(AppData previous, AppData next) {
+    if (_sessionMode != SessionMode.screen) {
+      return true;
+    }
+
+    final activeScreenId = _activeScreenId;
+    if (activeScreenId == null) {
+      return true;
+    }
+
+    final previousScreen = _findScreen(previous.screens, activeScreenId);
+    final nextScreen = _findScreen(next.screens, activeScreenId);
+    if (previousScreen == null || nextScreen == null) {
+      return true;
+    }
+
+    if (previousScreen.name != nextScreen.name ||
+        previousScreen.loginCode != nextScreen.loginCode ||
+        previousScreen.password != nextScreen.password ||
+        previousScreen.location != nextScreen.location ||
+        !_sameStringLists(
+          previousScreen.assignedMediaIds,
+          nextScreen.assignedMediaIds,
+        )) {
+      return true;
+    }
+
+    final previousMedia = _mediaForScreenFromData(previous, activeScreenId);
+    final nextMedia = _mediaForScreenFromData(next, activeScreenId);
+    if (previousMedia.length != nextMedia.length) {
+      return true;
+    }
+
+    for (var i = 0; i < previousMedia.length; i++) {
+      if (!_sameMediaItem(previousMedia[i], nextMedia[i])) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  ScreenDevice? _findScreen(List<ScreenDevice> screens, String id) {
+    for (final screen in screens) {
+      if (screen.id == id) return screen;
+    }
+    return null;
+  }
+
+  List<MediaItem> _mediaForScreenFromData(AppData data, String screenId) {
+    final screen = _findScreen(data.screens, screenId);
+    if (screen == null) return const [];
+    return data.mediaItems
+        .where((item) => screen.assignedMediaIds.contains(item.id))
+        .toList();
+  }
+
+  bool _sameStringLists(List<String> left, List<String> right) {
+    if (left.length != right.length) return false;
+    for (var i = 0; i < left.length; i++) {
+      if (left[i] != right[i]) return false;
+    }
+    return true;
+  }
+
+  bool _sameMediaItem(MediaItem left, MediaItem right) {
+    return left.id == right.id &&
+        left.title == right.title &&
+        left.url == right.url &&
+        left.kind == right.kind &&
+        left.description == right.description &&
+        left.durationSeconds == right.durationSeconds &&
+        left.createdAt == right.createdAt &&
+        left.storagePath == right.storagePath;
   }
 
   @override

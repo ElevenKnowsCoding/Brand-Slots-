@@ -153,6 +153,35 @@ class _SectionMeta {
   final String subtitle;
 }
 
+Future<void> _openExternalUrl(BuildContext context, String url) async {
+  final trimmed = url.trim();
+  final uri = Uri.tryParse(trimmed);
+  if (uri == null || !uri.hasScheme) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('The download link is invalid.')),
+    );
+    return;
+  }
+
+  try {
+    final launched = await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+    );
+    if (launched) return;
+  } catch (_) {}
+
+  await Clipboard.setData(ClipboardData(text: trimmed));
+  if (!context.mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text(
+        'Could not open the link. The download URL was copied instead.',
+      ),
+    ),
+  );
+}
+
 _SectionMeta _sectionMeta(_AdminSection section) {
   switch (section) {
     case _AdminSection.dashboard:
@@ -992,8 +1021,7 @@ class _ScreensSectionState extends State<_ScreensSection> {
           if (downloadUrl != null)
             TextButton(
               onPressed: () async {
-                final uri = Uri.tryParse(downloadUrl);
-                if (uri != null) await launchUrl(uri);
+                await _openExternalUrl(context, downloadUrl);
               },
               child: const Text('Download APK'),
             ),
@@ -2303,8 +2331,7 @@ class _ScreenCard extends StatelessWidget {
               if (downloadUrl != null)
                 FilledButton(
                   onPressed: () async {
-                    final uri = Uri.tryParse(downloadUrl!);
-                    if (uri != null) await launchUrl(uri);
+                    await _openExternalUrl(context, downloadUrl!);
                   },
                   child: const Text('Download'),
                 ),
