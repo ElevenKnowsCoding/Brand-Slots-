@@ -1,0 +1,25 @@
+name: ad_master_flutter
+description: Admin and screen management app built with Flutter.
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.4.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  supabase_flutter: ^2.8.4
+  file_picker: ^8.1.2
+  shared_preferences: ^2.3.2
+  video_player: ^2.9.2
+  url_launcher: ^6.3.1
+  path_provider: ^2.1.5
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
