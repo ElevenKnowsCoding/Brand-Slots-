@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+const _buildVersion = 'f53406a';
+
 class LandingPage extends StatelessWidget {
   const LandingPage({
     super.key,
@@ -39,9 +41,19 @@ class LandingPage extends StatelessWidget {
                     child: Card(
                       child: Padding(
                         padding: const EdgeInsets.all(20),
-                        child: Text(
-                          'Backend mode: $backendLabel',
-                          style: Theme.of(context).textTheme.titleMedium,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Backend mode: $backendLabel',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Build: $_buildVersion',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ],
                         ),
                       ),
                     ),
