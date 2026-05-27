@@ -20,7 +20,7 @@ void main() async {
     anonKey: SupabaseOptions.anonKey,
   );
   
-  final controller = AppController(RepositoryFactory.create());
+  final controller = AppController(RepositoryFactory.createSupabase());
   runApp(AdMasterApp(controller: controller));
 }
 
