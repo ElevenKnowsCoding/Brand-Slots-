@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../state/app_controller.dart';
+import '../supabase_options.dart';
+
+const _adminBuildVersion = 'ba189a7';
 
 class AdminLoginPage extends StatefulWidget {
   const AdminLoginPage({
@@ -101,6 +104,11 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                     Text(
                       'Sign in to the admin portal',
                       style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: 20),
+                    SelectableText(
+                      'Build: $_adminBuildVersion\nSupabase: ${SupabaseOptions.url}',
+                      style: Theme.of(context).textTheme.bodySmall,
                     ),
                     const SizedBox(height: 20),
                     TextFormField(
