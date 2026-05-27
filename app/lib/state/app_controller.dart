@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'dart:async';
+import 'dart:typed_data';
 
 import '../models/app_models.dart';
 import '../services/app_repository.dart';
@@ -27,8 +28,10 @@ class AppController extends ChangeNotifier {
   SessionMode get sessionMode => _sessionMode;
   OrganizationProfile get organization => _data.organization;
   AdminAccount? get admin => _data.admin;
+  List<ClientProfile> get clients => _data.clients;
   List<ScreenDevice> get screens => _data.screens;
   List<MediaItem> get mediaItems => _data.mediaItems;
+  List<MediaPlaybackStat> get playbackStats => _data.playbackStats;
   ScreenDevice? get activeScreen =>
       _activeScreenId == null ? null : getScreenById(_activeScreenId!);
 
@@ -86,7 +89,7 @@ class AppController extends ChangeNotifier {
     final success = await _repository.loginScreen(loginCode, password);
     if (!success) return false;
     final screen = _data.screens.firstWhere(
-      (item) =>
+        (item) =>
           item.loginCode.trim().toLowerCase() == loginCode.trim().toLowerCase(),
       orElse: () => const ScreenDevice(
         id: '',
@@ -118,6 +121,30 @@ class AppController extends ChangeNotifier {
     await _repository.updateOrganization(profile);
   }
 
+  Future<void> addClient({
+    required String name,
+    required String contactName,
+    required String contactEmail,
+    required String phone,
+    required String notes,
+  }) async {
+    await _repository.addClient(
+      name: name,
+      contactName: contactName,
+      contactEmail: contactEmail,
+      phone: phone,
+      notes: notes,
+    );
+  }
+
+  Future<void> updateClient(ClientProfile client) async {
+    await _repository.updateClient(client);
+  }
+
+  Future<void> deleteClient(String clientId) async {
+    await _repository.deleteClient(clientId);
+  }
+
   Future<String?> addScreen({
     required String name,
     required String loginCode,
@@ -137,21 +164,21 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> addMedia({
+    required String clientId,
     required String title,
     required MediaKind kind,
     required String description,
     required int durationSeconds,
-    required List<String> screenIds,
     String? externalUrl,
     Uint8List? fileBytes,
     String? fileName,
   }) async {
     await _repository.addMedia(
+      clientId: clientId,
       title: title,
       kind: kind,
       description: description,
       durationSeconds: durationSeconds,
-      screenIds: screenIds,
       externalUrl: externalUrl,
       fileBytes: fileBytes,
       fileName: fileName,
@@ -164,10 +191,12 @@ class AppController extends ChangeNotifier {
 
   Future<void> reportScreenPlayback({
     required String screenId,
+    required String mediaId,
     required bool completedRound,
   }) async {
     await _repository.reportScreenPlayback(
       screenId: screenId,
+      mediaId: mediaId,
       completedRound: completedRound,
     );
   }
@@ -184,6 +213,40 @@ class AppController extends ChangeNotifier {
     if (screen == null) return const [];
     return _data.mediaItems
         .where((item) => screen.assignedMediaIds.contains(item.id))
+        .toList()
+      ..sort(
+        (left, right) => screen.assignedMediaIds
+            .indexOf(left.id)
+            .compareTo(screen.assignedMediaIds.indexOf(right.id)),
+      );
+  }
+
+  List<MediaItem> mediaForClient(String clientId) {
+    return _data.mediaItems.where((item) => item.clientId == clientId).toList();
+  }
+
+  ClientProfile? getClientById(String clientId) {
+    for (final client in _data.clients) {
+      if (client.id == clientId) return client;
+    }
+    return null;
+  }
+
+  int totalPlaysForMedia(String mediaId) {
+    var total = 0;
+    for (final stat in _data.playbackStats) {
+      if (stat.mediaId == mediaId) total += stat.playCount;
+    }
+    return total;
+  }
+
+  List<MediaPlaybackStat> playbackForMedia(String mediaId) {
+    return _data.playbackStats.where((item) => item.mediaId == mediaId).toList();
+  }
+
+  List<MediaPlaybackStat> playbackForScreen(String screenId) {
+    return _data.playbackStats
+        .where((item) => item.screenId == screenId)
         .toList();
   }
 
@@ -258,6 +321,7 @@ class AppController extends ChangeNotifier {
 
   bool _sameMediaItem(MediaItem left, MediaItem right) {
     return left.id == right.id &&
+        left.clientId == right.clientId &&
         left.title == right.title &&
         left.url == right.url &&
         left.kind == right.kind &&

@@ -227,11 +227,14 @@ class _ScreenPlayerPageState extends State<ScreenPlayerPage> {
         : media.indexWhere((item) => item.id == visibleItem.id);
     final completedRound =
         currentPosition != -1 && currentPosition == media.length - 1;
+    final fallbackIndex = _visibleIndex.clamp(0, media.length - 1) as int;
+    final playedMediaId = visibleItem?.id ?? media[fallbackIndex].id;
 
     _isAdvancing = true;
     unawaited(
       widget.controller.reportScreenPlayback(
         screenId: screen.id,
+        mediaId: playedMediaId,
         completedRound: completedRound,
       ),
     );

@@ -126,6 +126,70 @@ class OrganizationProfile {
   }
 }
 
+class ClientProfile {
+  const ClientProfile({
+    required this.id,
+    required this.name,
+    required this.contactName,
+    required this.contactEmail,
+    required this.phone,
+    required this.notes,
+    required this.createdAt,
+  });
+
+  final String id;
+  final String name;
+  final String contactName;
+  final String contactEmail;
+  final String phone;
+  final String notes;
+  final String createdAt;
+
+  ClientProfile copyWith({
+    String? id,
+    String? name,
+    String? contactName,
+    String? contactEmail,
+    String? phone,
+    String? notes,
+    String? createdAt,
+  }) {
+    return ClientProfile(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      contactName: contactName ?? this.contactName,
+      contactEmail: contactEmail ?? this.contactEmail,
+      phone: phone ?? this.phone,
+      notes: notes ?? this.notes,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'contactName': contactName,
+      'contactEmail': contactEmail,
+      'phone': phone,
+      'notes': notes,
+      'createdAt': createdAt,
+    };
+  }
+
+  factory ClientProfile.fromJson(Map<String, dynamic> json) {
+    return ClientProfile(
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      contactName: json['contactName'] as String? ?? '',
+      contactEmail: json['contactEmail'] as String? ?? '',
+      phone: json['phone'] as String? ?? '',
+      notes: json['notes'] as String? ?? '',
+      createdAt: json['createdAt'] as String? ?? '',
+    );
+  }
+}
+
 class ScreenDevice {
   const ScreenDevice({
     required this.id,
@@ -231,6 +295,7 @@ class ScreenDevice {
 class MediaItem {
   const MediaItem({
     required this.id,
+    required this.clientId,
     required this.title,
     required this.url,
     required this.kind,
@@ -241,6 +306,7 @@ class MediaItem {
   });
 
   final String id;
+  final String clientId;
   final String title;
   final String url;
   final MediaKind kind;
@@ -251,6 +317,7 @@ class MediaItem {
 
   MediaItem copyWith({
     String? id,
+    String? clientId,
     String? title,
     String? url,
     MediaKind? kind,
@@ -261,6 +328,7 @@ class MediaItem {
   }) {
     return MediaItem(
       id: id ?? this.id,
+      clientId: clientId ?? this.clientId,
       title: title ?? this.title,
       url: url ?? this.url,
       kind: kind ?? this.kind,
@@ -274,6 +342,7 @@ class MediaItem {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'clientId': clientId,
       'title': title,
       'url': url,
       'kind': kind.name,
@@ -287,6 +356,7 @@ class MediaItem {
   factory MediaItem.fromJson(Map<String, dynamic> json) {
     return MediaItem(
       id: json['id'] as String? ?? '',
+      clientId: json['clientId'] as String? ?? '',
       title: json['title'] as String? ?? '',
       url: json['url'] as String? ?? '',
       kind: (json['kind'] as String? ?? 'video') == 'image'
@@ -300,25 +370,83 @@ class MediaItem {
   }
 }
 
+class MediaPlaybackStat {
+  const MediaPlaybackStat({
+    required this.id,
+    required this.mediaId,
+    required this.screenId,
+    required this.playCount,
+    required this.lastPlayedAt,
+  });
+
+  final String id;
+  final String mediaId;
+  final String screenId;
+  final int playCount;
+  final String? lastPlayedAt;
+
+  MediaPlaybackStat copyWith({
+    String? id,
+    String? mediaId,
+    String? screenId,
+    int? playCount,
+    String? lastPlayedAt,
+  }) {
+    return MediaPlaybackStat(
+      id: id ?? this.id,
+      mediaId: mediaId ?? this.mediaId,
+      screenId: screenId ?? this.screenId,
+      playCount: playCount ?? this.playCount,
+      lastPlayedAt: lastPlayedAt ?? this.lastPlayedAt,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'mediaId': mediaId,
+      'screenId': screenId,
+      'playCount': playCount,
+      'lastPlayedAt': lastPlayedAt,
+    };
+  }
+
+  factory MediaPlaybackStat.fromJson(Map<String, dynamic> json) {
+    return MediaPlaybackStat(
+      id: json['id'] as String? ?? '',
+      mediaId: json['mediaId'] as String? ?? '',
+      screenId: json['screenId'] as String? ?? '',
+      playCount: (json['playCount'] as num?)?.toInt() ?? 0,
+      lastPlayedAt: json['lastPlayedAt'] as String?,
+    );
+  }
+}
+
 class AppData {
   const AppData({
     required this.admin,
     required this.organization,
+    required this.clients,
     required this.screens,
     required this.mediaItems,
+    required this.playbackStats,
   });
 
   final AdminAccount? admin;
   final OrganizationProfile organization;
+  final List<ClientProfile> clients;
   final List<ScreenDevice> screens;
   final List<MediaItem> mediaItems;
+  final List<MediaPlaybackStat> playbackStats;
 
   factory AppData.empty() {
     return AppData(
       admin: null,
       organization: OrganizationProfile.empty(),
+      clients: const [],
       screens: const [],
       mediaItems: const [],
+      playbackStats: const [],
     );
   }
 
@@ -326,14 +454,18 @@ class AppData {
     AdminAccount? admin,
     bool clearAdmin = false,
     OrganizationProfile? organization,
+    List<ClientProfile>? clients,
     List<ScreenDevice>? screens,
     List<MediaItem>? mediaItems,
+    List<MediaPlaybackStat>? playbackStats,
   }) {
     return AppData(
       admin: clearAdmin ? null : (admin ?? this.admin),
       organization: organization ?? this.organization,
+      clients: clients ?? this.clients,
       screens: screens ?? this.screens,
       mediaItems: mediaItems ?? this.mediaItems,
+      playbackStats: playbackStats ?? this.playbackStats,
     );
   }
 
@@ -341,8 +473,10 @@ class AppData {
     return {
       'admin': admin?.toJson(),
       'organization': organization.toJson(),
+      'clients': clients.map((item) => item.toJson()).toList(),
       'screens': screens.map((item) => item.toJson()).toList(),
       'mediaItems': mediaItems.map((item) => item.toJson()).toList(),
+      'playbackStats': playbackStats.map((item) => item.toJson()).toList(),
     };
   }
 
@@ -354,11 +488,19 @@ class AppData {
       organization: OrganizationProfile.fromJson(
         json['organization'] as Map<String, dynamic>? ?? const {},
       ),
+      clients: (json['clients'] as List<dynamic>? ?? const [])
+          .map((item) => ClientProfile.fromJson(item as Map<String, dynamic>))
+          .toList(),
       screens: (json['screens'] as List<dynamic>? ?? const [])
           .map((item) => ScreenDevice.fromJson(item as Map<String, dynamic>))
           .toList(),
       mediaItems: (json['mediaItems'] as List<dynamic>? ?? const [])
           .map((item) => MediaItem.fromJson(item as Map<String, dynamic>))
+          .toList(),
+      playbackStats: (json['playbackStats'] as List<dynamic>? ?? const [])
+          .map(
+            (item) => MediaPlaybackStat.fromJson(item as Map<String, dynamic>),
+          )
           .toList(),
     );
   }

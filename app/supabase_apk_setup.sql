@@ -14,6 +14,16 @@ create table if not exists public.app_config (
   local_project_path text not null default ''
 );
 
+create table if not exists public.clients (
+  id text primary key default gen_random_uuid()::text,
+  name text not null default '',
+  contact_name text not null default '',
+  contact_email text not null default '',
+  phone text not null default '',
+  notes text not null default '',
+  created_at text not null default now()::text
+);
+
 create table if not exists public.screens (
   id uuid primary key default gen_random_uuid(),
   name text not null default '',
@@ -29,6 +39,7 @@ create table if not exists public.screens (
 
 create table if not exists public.media_items (
   id uuid primary key default gen_random_uuid(),
+  client_id text references public.clients(id) on delete cascade,
   title text not null default '',
   url text not null default '',
   kind text not null default 'video',
@@ -36,6 +47,15 @@ create table if not exists public.media_items (
   duration_seconds integer not null default 15,
   created_at text not null default now()::text,
   storage_path text
+);
+
+create table if not exists public.media_playback (
+  id text primary key default gen_random_uuid()::text,
+  media_id text not null,
+  screen_id text not null,
+  play_count integer not null default 0,
+  last_played_at text,
+  constraint media_playback_media_screen_unique unique (media_id, screen_id)
 );
 
 alter table if exists public.app_config
@@ -52,6 +72,52 @@ add column if not exists completed_rounds integer not null default 0;
 
 alter table if exists public.screens
 add column if not exists last_playback_at text;
+
+alter table if exists public.media_items
+add column if not exists client_id text;
+
+do $$
+declare
+  fallback_client_id text := 'default-client';
+begin
+  if exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'media_items'
+      and column_name = 'client_id'
+  ) then
+    if exists (
+      select 1
+      from public.media_items
+      where client_id is null or client_id = ''
+    ) then
+      insert into public.clients (
+        id,
+        name,
+        contact_name,
+        contact_email,
+        phone,
+        notes,
+        created_at
+      )
+      values (
+        fallback_client_id,
+        'Default Client',
+        'Imported Records',
+        '',
+        '',
+        'Created automatically for existing media items.',
+        now()::text
+      )
+      on conflict (id) do nothing;
+
+      update public.media_items
+      set client_id = fallback_client_id
+      where client_id is null or client_id = '';
+    end if;
+  end if;
+end $$;
 
 insert into public.app_config (
   id,
@@ -87,12 +153,21 @@ set
   end;
 
 alter table public.app_config replica identity full;
+alter table public.clients replica identity full;
 alter table public.screens replica identity full;
 alter table public.media_items replica identity full;
+alter table public.media_playback replica identity full;
 
 do $$
 begin
   alter publication supabase_realtime add table public.app_config;
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.clients;
 exception
   when duplicate_object then null;
 end $$;
@@ -111,9 +186,18 @@ exception
   when duplicate_object then null;
 end $$;
 
+do $$
+begin
+  alter publication supabase_realtime add table public.media_playback;
+exception
+  when duplicate_object then null;
+end $$;
+
 alter table public.app_config disable row level security;
+alter table public.clients disable row level security;
 alter table public.screens disable row level security;
 alter table public.media_items disable row level security;
+alter table public.media_playback disable row level security;
 
 insert into storage.buckets (id, name, public)
 values ('media', 'media', true)

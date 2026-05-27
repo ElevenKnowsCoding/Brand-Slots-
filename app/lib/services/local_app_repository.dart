@@ -98,6 +98,68 @@ class LocalAppRepository implements AppRepository {
   }
 
   @override
+  Future<void> addClient({
+    required String name,
+    required String contactName,
+    required String contactEmail,
+    required String phone,
+    required String notes,
+  }) async {
+    _data = _data.copyWith(
+      clients: [
+        ..._data.clients,
+        ClientProfile(
+          id: _id(),
+          name: name.trim(),
+          contactName: contactName.trim(),
+          contactEmail: contactEmail.trim(),
+          phone: phone.trim(),
+          notes: notes.trim(),
+          createdAt: DateTime.now().toIso8601String(),
+        ),
+      ],
+    );
+    await _persist();
+  }
+
+  @override
+  Future<void> updateClient(ClientProfile client) async {
+    _data = _data.copyWith(
+      clients: _data.clients
+          .map((item) => item.id == client.id ? client : item)
+          .toList(),
+    );
+    await _persist();
+  }
+
+  @override
+  Future<void> deleteClient(String clientId) async {
+    final mediaIds = _data.mediaItems
+        .where((item) => item.clientId == clientId)
+        .map((item) => item.id)
+        .toSet();
+    _data = _data.copyWith(
+      clients: _data.clients.where((item) => item.id != clientId).toList(),
+      mediaItems: _data.mediaItems
+          .where((item) => item.clientId != clientId)
+          .toList(),
+      playbackStats: _data.playbackStats
+          .where((item) => !mediaIds.contains(item.mediaId))
+          .toList(),
+      screens: _data.screens
+          .map(
+            (screen) => screen.copyWith(
+              assignedMediaIds: screen.assignedMediaIds
+                  .where((id) => !mediaIds.contains(id))
+                  .toList(),
+            ),
+          )
+          .toList(),
+    );
+    await _persist();
+  }
+
+  @override
   Future<String?> addScreen({
     required String name,
     required String loginCode,
@@ -145,36 +207,19 @@ class LocalAppRepository implements AppRepository {
   }
 
   @override
-  Future<void> reportScreenPlayback({
-    required String screenId,
-    required bool completedRound,
-  }) async {
-    _data = _data.copyWith(
-      screens: _data.screens.map((screen) {
-        if (screen.id != screenId) return screen;
-        return screen.copyWith(
-          playCount: screen.playCount + 1,
-          completedRounds: screen.completedRounds + (completedRound ? 1 : 0),
-          lastPlaybackAt: DateTime.now().toIso8601String(),
-        );
-      }).toList(),
-    );
-    await _persist();
-  }
-
-  @override
   Future<void> addMedia({
+    required String clientId,
     required String title,
     required MediaKind kind,
     required String description,
     required int durationSeconds,
-    required List<String> screenIds,
     String? externalUrl,
     Uint8List? fileBytes,
     String? fileName,
   }) async {
     final media = MediaItem(
       id: _id(),
+      clientId: clientId,
       title: title.trim(),
       url: (externalUrl ?? '').trim(),
       kind: kind,
@@ -184,15 +229,7 @@ class LocalAppRepository implements AppRepository {
       storagePath: null,
     );
 
-    _data = _data.copyWith(
-      mediaItems: [..._data.mediaItems, media],
-      screens: _data.screens.map((screen) {
-        if (!screenIds.contains(screen.id)) return screen;
-        return screen.copyWith(
-          assignedMediaIds: [...screen.assignedMediaIds, media.id],
-        );
-      }).toList(),
-    );
+    _data = _data.copyWith(mediaItems: [..._data.mediaItems, media]);
     await _persist();
   }
 
@@ -200,6 +237,9 @@ class LocalAppRepository implements AppRepository {
   Future<void> deleteMedia(String mediaId) async {
     _data = _data.copyWith(
       mediaItems: _data.mediaItems.where((item) => item.id != mediaId).toList(),
+      playbackStats: _data.playbackStats
+          .where((item) => item.mediaId != mediaId)
+          .toList(),
       screens: _data.screens
           .map(
             (screen) => screen.copyWith(
@@ -210,6 +250,49 @@ class LocalAppRepository implements AppRepository {
           )
           .toList(),
     );
+    await _persist();
+  }
+
+  @override
+  Future<void> reportScreenPlayback({
+    required String screenId,
+    required String mediaId,
+    required bool completedRound,
+  }) async {
+    final now = DateTime.now().toIso8601String();
+
+    final screens = _data.screens.map((screen) {
+      if (screen.id != screenId) return screen;
+      return screen.copyWith(
+        playCount: screen.playCount + 1,
+        completedRounds: screen.completedRounds + (completedRound ? 1 : 0),
+        lastPlaybackAt: now,
+      );
+    }).toList();
+
+    final statIndex = _data.playbackStats.indexWhere(
+      (item) => item.mediaId == mediaId && item.screenId == screenId,
+    );
+    final playbackStats = [..._data.playbackStats];
+    if (statIndex == -1) {
+      playbackStats.add(
+        MediaPlaybackStat(
+          id: _id(),
+          mediaId: mediaId,
+          screenId: screenId,
+          playCount: 1,
+          lastPlayedAt: now,
+        ),
+      );
+    } else {
+      final current = playbackStats[statIndex];
+      playbackStats[statIndex] = current.copyWith(
+        playCount: current.playCount + 1,
+        lastPlayedAt: now,
+      );
+    }
+
+    _data = _data.copyWith(screens: screens, playbackStats: playbackStats);
     await _persist();
   }
 
