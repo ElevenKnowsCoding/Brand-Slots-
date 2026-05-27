@@ -53,9 +53,38 @@ add column if not exists completed_rounds integer not null default 0;
 alter table if exists public.screens
 add column if not exists last_playback_at text;
 
-insert into public.app_config (id)
-values ('singleton')
-on conflict (id) do nothing;
+insert into public.app_config (
+  id,
+  company_name,
+  admin_name,
+  admin_email,
+  admin_password
+)
+values (
+  'singleton',
+  'Brand Slots',
+  'Admin',
+  'admin@brandslots.com',
+  'admin123'
+)
+on conflict (id) do update
+set
+  company_name = case
+    when public.app_config.company_name = '' then excluded.company_name
+    else public.app_config.company_name
+  end,
+  admin_name = case
+    when public.app_config.admin_name = '' then excluded.admin_name
+    else public.app_config.admin_name
+  end,
+  admin_email = case
+    when public.app_config.admin_email = '' then excluded.admin_email
+    else public.app_config.admin_email
+  end,
+  admin_password = case
+    when public.app_config.admin_password = '' then excluded.admin_password
+    else public.app_config.admin_password
+  end;
 
 alter table public.app_config replica identity full;
 alter table public.screens replica identity full;
