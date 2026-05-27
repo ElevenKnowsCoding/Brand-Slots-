@@ -1,3 +1,43 @@
+create extension if not exists pgcrypto;
+
+create table if not exists public.app_config (
+  id text primary key default 'singleton',
+  company_name text not null default '',
+  admin_name text not null default '',
+  admin_email text not null default '',
+  admin_password text not null default '',
+  phone text not null default '',
+  welcome_message text not null default 'No content has been assigned yet.',
+  logo_url text not null default '',
+  accent_color_hex text not null default '#0F766E',
+  apk_base_url text not null default '',
+  local_project_path text not null default ''
+);
+
+create table if not exists public.screens (
+  id uuid primary key default gen_random_uuid(),
+  name text not null default '',
+  login_code text not null unique,
+  password text not null default '',
+  location text not null default '',
+  assigned_media_ids text[] not null default '{}',
+  last_seen_at text,
+  play_count integer not null default 0,
+  completed_rounds integer not null default 0,
+  last_playback_at text
+);
+
+create table if not exists public.media_items (
+  id uuid primary key default gen_random_uuid(),
+  title text not null default '',
+  url text not null default '',
+  kind text not null default 'video',
+  description text not null default '',
+  duration_seconds integer not null default 15,
+  created_at text not null default now()::text,
+  storage_path text
+);
+
 alter table if exists public.app_config
 add column if not exists apk_base_url text not null default '';
 
@@ -12,3 +52,69 @@ add column if not exists completed_rounds integer not null default 0;
 
 alter table if exists public.screens
 add column if not exists last_playback_at text;
+
+insert into public.app_config (id)
+values ('singleton')
+on conflict (id) do nothing;
+
+alter table public.app_config replica identity full;
+alter table public.screens replica identity full;
+alter table public.media_items replica identity full;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.app_config;
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.screens;
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.media_items;
+exception
+  when duplicate_object then null;
+end $$;
+
+alter table public.app_config disable row level security;
+alter table public.screens disable row level security;
+alter table public.media_items disable row level security;
+
+insert into storage.buckets (id, name, public)
+values ('media', 'media', true)
+on conflict (id) do update set public = excluded.public;
+
+drop policy if exists "Public media objects are viewable" on storage.objects;
+create policy "Public media objects are viewable"
+on storage.objects
+for select
+to public
+using (bucket_id = 'media');
+
+drop policy if exists "Public media objects can be uploaded" on storage.objects;
+create policy "Public media objects can be uploaded"
+on storage.objects
+for insert
+to public
+with check (bucket_id = 'media');
+
+drop policy if exists "Public media objects can be updated" on storage.objects;
+create policy "Public media objects can be updated"
+on storage.objects
+for update
+to public
+using (bucket_id = 'media')
+with check (bucket_id = 'media');
+
+drop policy if exists "Public media objects can be deleted" on storage.objects;
+create policy "Public media objects can be deleted"
+on storage.objects
+for delete
+to public
+using (bucket_id = 'media');
