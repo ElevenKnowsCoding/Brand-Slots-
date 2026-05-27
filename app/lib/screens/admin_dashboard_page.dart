@@ -2030,7 +2030,7 @@ class _PlayerSectionState extends State<_PlayerSection> {
       await controller.setVolume(_muted(slot) ? 0 : _volume(slot));
       controller.addListener(() {
         if (!mounted || _video(slot) != controller) return;
-        final value = controller.value;
+        final value = controller!.value;
         if (!value.isInitialized || value.duration.inMilliseconds <= 0) return;
         if (value.position >= value.duration && _autoplay(slot)) {
           _advance(slot);
