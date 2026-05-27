@@ -20,19 +20,13 @@ class AdminLoginPage extends StatefulWidget {
 
 class _AdminLoginPageState extends State<AdminLoginPage> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _companyController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   String? _error;
   bool _isBusy = false;
 
-  bool get _isSetup => !widget.controller.hasAdmin;
-
   @override
   void dispose() {
-    _nameController.dispose();
-    _companyController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -46,25 +40,16 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
     });
 
     try {
-      if (_isSetup) {
-        await widget.controller.createAdmin(
-          name: _nameController.text,
-          email: _emailController.text,
-          password: _passwordController.text,
-          companyName: _companyController.text,
-        );
-      } else {
-        final success = await widget.controller.loginAdmin(
-          _emailController.text,
-          _passwordController.text,
-        );
-        if (!success) {
-          setState(() {
-            _error = 'Invalid email or password.';
-            _isBusy = false;
-          });
-          return;
-        }
+      final success = await widget.controller.loginAdmin(
+        _emailController.text,
+        _passwordController.text,
+      );
+      if (!success) {
+        setState(() {
+          _error = 'Invalid email or password.';
+          _isBusy = false;
+        });
+        return;
       }
     } catch (error) {
       if (!mounted) return;
@@ -99,7 +84,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                 icon: const Icon(Icons.arrow_back),
               )
             : null,
-        title: Text(_isSetup ? 'Create Admin Account' : 'Admin Login'),
+        title: const Text('Admin Login'),
       ),
       body: Center(
         child: ConstrainedBox(
@@ -114,30 +99,10 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _isSetup
-                          ? 'Set up the first admin account'
-                          : 'Sign in to the admin portal',
+                      'Sign in to the admin portal',
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
                     const SizedBox(height: 20),
-                    if (_isSetup) ...[
-                      TextFormField(
-                        controller: _nameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Admin name',
-                        ),
-                        validator: _required,
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _companyController,
-                        decoration: const InputDecoration(
-                          labelText: 'Company name',
-                        ),
-                        validator: _required,
-                      ),
-                      const SizedBox(height: 16),
-                    ],
                     TextFormField(
                       controller: _emailController,
                       decoration: const InputDecoration(labelText: 'Email'),
@@ -152,9 +117,6 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                         if (value == null || value.isEmpty) {
                           return 'This field is required.';
                         }
-                        if (_isSetup && value.length < 6) {
-                          return 'Password must be at least 6 characters.';
-                        }
                         return null;
                       },
                     ),
@@ -165,7 +127,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                     const SizedBox(height: 20),
                     FilledButton(
                       onPressed: _isBusy ? null : _submit,
-                      child: Text(_isSetup ? 'Create Admin' : 'Login'),
+                      child: const Text('Login'),
                     ),
                   ],
                 ),

@@ -47,11 +47,11 @@ class LandingPage extends StatelessWidget {
                     ),
                   ),
                   _ModeCard(
-                    title: hasAdmin ? 'Admin Login' : 'Create Admin',
+                    title: 'Admin Login',
                     subtitle:
                         'Manage company profile, screens, and media assignments.',
                     icon: Icons.admin_panel_settings_outlined,
-                    actionLabel: hasAdmin ? 'Open Admin' : 'Setup Admin',
+                    actionLabel: 'Open Admin',
                     onPressed: onAdminSelected,
                   ),
                   _ModeCard(
