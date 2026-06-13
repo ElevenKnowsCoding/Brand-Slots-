@@ -42,6 +42,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   String _screenSearch = '';
   String _playerSearch = '';
   String _playerClientSearch = '';
+  String _clientSearch = '';
   String? _selectedPlayerClientId;
   final Map<String, Uint8List> _videoThumbnails = {};
 
@@ -804,8 +805,28 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               title: 'No clients yet',
               subtitle: 'Add a client to start uploading videos and photos.',
             )
-          else
-            for (final client in controller.clients) ...[
+          else ...[
+            TextField(
+              onChanged: (v) => setState(() => _clientSearch = v),
+              decoration: InputDecoration(
+                hintText: 'Search clients...',
+                prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                ),
+                filled: true,
+                fillColor: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 16),
+            for (final client in controller.clients.where((c) => c.name.toLowerCase().contains(_clientSearch.toLowerCase())).toList()) ...[
               _ClientExpandableCard(
                 client: client,
                 controller: controller,
@@ -822,6 +843,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               ),
               const SizedBox(height: 12),
             ],
+          ],
         ],
       ),
     );
