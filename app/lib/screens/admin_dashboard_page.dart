@@ -41,6 +41,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   String? _expandedReportCardId;
   String _screenSearch = '';
   String _playerSearch = '';
+  String _playerClientSearch = '';
   String? _selectedPlayerClientId;
   final Map<String, Uint8List> _videoThumbnails = {};
 
@@ -998,7 +999,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                         const SizedBox(height: 8),
                         const Divider(height: 1, color: Color(0xFFF3F4F6)),
                         const Padding(
-                          padding: EdgeInsets.fromLTRB(8, 12, 8, 8),
+                          padding: EdgeInsets.fromLTRB(8, 12, 8, 4),
                           child: Text(
                             'CLIENTS',
                             style: TextStyle(
@@ -1009,7 +1010,29 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                             ),
                           ),
                         ),
-                        for (final client in controller.clients) ...[
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                          child: TextField(
+                            onChanged: (v) => setState(() => _playerClientSearch = v),
+                            decoration: InputDecoration(
+                              hintText: 'Search clients...',
+                              prefixIcon: const Icon(Icons.search_rounded, size: 16),
+                              isDense: true,
+                              contentPadding: const EdgeInsets.symmetric(vertical: 7),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                              ),
+                              filled: true,
+                              fillColor: const Color(0xFFF9FAFB),
+                            ),
+                          ),
+                        ),
+                        for (final client in controller.clients.where((c) => c.name.toLowerCase().contains(_playerClientSearch.toLowerCase())).toList()) ...[
                           Padding(
                             padding: const EdgeInsets.only(bottom: 4),
                             child: _SelectableTile(
