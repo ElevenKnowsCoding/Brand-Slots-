@@ -397,6 +397,8 @@ class SupabaseAppRepository implements AppRepository {
   }) async {
     final now = DateTime.now();
     final nowStr = now.toIso8601String();
+    final playDateStr =
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 
     final screenIndex = _screens.indexWhere((s) => s.id == screenId);
     if (screenIndex == -1) return;
@@ -411,7 +413,7 @@ class SupabaseAppRepository implements AppRepository {
     ];
 
     final statIndex = _playbackStats.indexWhere(
-      (s) => s.mediaId == mediaId && s.screenId == screenId,
+      (s) => s.mediaId == mediaId && s.screenId == screenId && s.playDate == playDateStr,
     );
     if (statIndex == -1) {
       _playbackStats = [
@@ -422,6 +424,7 @@ class SupabaseAppRepository implements AppRepository {
           screenId: screenId,
           playCount: 1,
           lastPlayedAt: nowStr,
+          playDate: playDateStr,
         ),
       ];
     } else {
@@ -470,11 +473,17 @@ class SupabaseAppRepository implements AppRepository {
         'last_playback_at': nowStr,
       }).eq('id', screenId);
 
+      final playDate = DateTime.tryParse(nowStr)?.toLocal();
+      final playDateStr = playDate == null
+          ? null
+          : '${playDate.year}-${playDate.month.toString().padLeft(2, '0')}-${playDate.day.toString().padLeft(2, '0')}';
+
       final existing = await _db
           .from('media_playback')
           .select()
           .eq('media_id', mediaId)
           .eq('screen_id', screenId)
+          .eq('play_date', playDateStr ?? '')
           .maybeSingle();
       if (existing == null) {
         await _db.from('media_playback').insert({
@@ -482,6 +491,7 @@ class SupabaseAppRepository implements AppRepository {
           'screen_id': screenId,
           'play_count': addCount,
           'last_played_at': nowStr,
+          'play_date': playDateStr,
         });
       } else {
         await _db.from('media_playback').update({
