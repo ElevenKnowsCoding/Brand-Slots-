@@ -16,25 +16,36 @@ class AppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: Theme.of(context).textTheme.headlineSmall),
-            Text(
-              subtitle,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: const Color(0xFF58706B)),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 700;
+        final horizontalPadding = isCompact ? 16.0 : 20.0;
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: Theme.of(context).textTheme.headlineSmall),
+                Text(
+                  subtitle,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(color: const Color(0xFF58706B)),
+                ),
+              ],
             ),
-          ],
-        ),
-        actions: actions,
-      ),
-      body: SafeArea(
-        child: Padding(padding: const EdgeInsets.all(20), child: child),
-      ),
+            actions: actions,
+          ),
+          body: SafeArea(
+            child: Padding(
+              padding: EdgeInsets.all(horizontalPadding),
+              child: child,
+            ),
+          ),
+        );
+      },
     );
   }
 }

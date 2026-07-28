@@ -38,6 +38,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   DateTime _customEndDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
   String? _reportFilterScreenId;
   String? _reportFilterClientId;
+  String _reportClientSearch = '';
   String? _expandedReportCardId;
   String _screenSearch = '';
   String _playerSearch = '';
@@ -270,40 +271,60 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final w = constraints.maxWidth;
+        final isCompact = w < 720;
+        final statCardWidth = w < 520
+            ? w
+            : w < 980
+                ? (w - 16) / 2
+                : (w - 48) / 4;
         return SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Stat cards row — evenly split
-              Row(
+              Wrap(
+                spacing: 16,
+                runSpacing: 16,
                 children: [
-                  _buildStatCard(
+                  SizedBox(
+                    width: statCardWidth,
+                    child: _buildStatCard(
                       'Total Screens',
                       '${controller.screens.length}',
                       'Registered screen players',
                       const Color(0xFF111827),
-                      Icons.tv_rounded),
-                  const SizedBox(width: 16),
-                  _buildStatCard(
+                      Icons.tv_rounded,
+                    ),
+                  ),
+                  SizedBox(
+                    width: statCardWidth,
+                    child: _buildStatCard(
                       'Online Screens',
                       '${controller.screens.where((s) => _isNowPlaying(s)).length}',
                       'Currently playing media',
                       const Color(0xFF22C55E),
-                      Icons.circle),
-                  const SizedBox(width: 16),
-                  _buildStatCard(
+                      Icons.circle,
+                    ),
+                  ),
+                  SizedBox(
+                    width: statCardWidth,
+                    child: _buildStatCard(
                       'Total Clients',
                       '${controller.clients.length}',
                       'Accounts with their own media library',
                       const Color(0xFF6B7280),
-                      Icons.groups_rounded),
-                  const SizedBox(width: 16),
-                  _buildStatCard(
+                      Icons.groups_rounded,
+                    ),
+                  ),
+                  SizedBox(
+                    width: statCardWidth,
+                    child: _buildStatCard(
                       'Uploaded Media',
                       '${controller.mediaItems.length}',
                       'Videos and photos stored',
                       const Color(0xFF6B7280),
-                      Icons.cloud_upload_rounded),
+                      Icons.cloud_upload_rounded,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 24),
@@ -322,31 +343,63 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
   Widget _buildStatCard(
       String title, String value, String detail, Color accent, IconData icon) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title,
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 240;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
                 style: const TextStyle(
-                    color: Color(0xFF6B7280),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500)),
-            const SizedBox(height: 10),
-            Text(value,
-                style: TextStyle(
-                    fontSize: 30, fontWeight: FontWeight.w800, color: accent)),
-            const SizedBox(height: 6),
-            Text(detail,
-                style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
-          ],
-        ),
+                  color: Color(0xFF6B7280),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 10),
+              if (compact)
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        value,
+                        style: TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w800,
+                          color: accent,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(icon, color: accent, size: 20),
+                  ],
+                )
+              else
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.w800,
+                    color: accent,
+                  ),
+                ),
+              const SizedBox(height: 6),
+              Text(
+                detail,
+                style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 12),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -780,72 +833,99 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   }
 
   Widget _buildClients(AppController controller) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 700;
+        return SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Expanded(
-                child: _PanelHeading(
-                  title: 'Clients',
-                  subtitle: 'Click a client to view and manage their media.',
+              if (isCompact)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const _PanelHeading(
+                      title: 'Clients',
+                      subtitle: 'Click a client to view and manage their media.',
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton.icon(
+                      onPressed: _showAddClientDialog,
+                      icon: const Icon(Icons.add_rounded),
+                      label: const Text('Add Client'),
+                    ),
+                  ],
+                )
+              else
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Expanded(
+                      child: _PanelHeading(
+                        title: 'Clients',
+                        subtitle:
+                            'Click a client to view and manage their media.',
+                      ),
+                    ),
+                    FilledButton.icon(
+                      onPressed: _showAddClientDialog,
+                      icon: const Icon(Icons.add_rounded),
+                      label: const Text('Add Client'),
+                    ),
+                  ],
                 ),
-              ),
-              FilledButton.icon(
-                onPressed: _showAddClientDialog,
-                icon: const Icon(Icons.add_rounded),
-                label: const Text('Add Client'),
-              ),
+              const SizedBox(height: 20),
+              if (controller.clients.isEmpty)
+                const _EmptyStateCard(
+                  title: 'No clients yet',
+                  subtitle: 'Add a client to start uploading videos and photos.',
+                )
+              else ...[
+                TextField(
+                  onChanged: (v) => setState(() => _clientSearch = v),
+                  decoration: InputDecoration(
+                    hintText: 'Search clients...',
+                    prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                for (final client in controller.clients
+                    .where((c) =>
+                        c.name.toLowerCase().contains(_clientSearch.toLowerCase()))
+                    .toList()) ...[
+                  _ClientExpandableCard(
+                    client: client,
+                    controller: controller,
+                    isExpanded: client.id == _selectedClientId,
+                    onTap: () => setState(() => _selectedClientId =
+                        _selectedClientId == client.id ? null : client.id),
+                    onEdit: () => _showEditClientDialog(client),
+                    onDelete: () => _confirmDeleteClient(client),
+                    onUpload: () => _showAddMediaDialog(client),
+                    onDeleteMedia: _confirmDeleteMedia,
+                    onAssignToScreens: (item) => _showAssignToScreensDialog(item),
+                    onThumbnailCaptured: (id, bytes) =>
+                        _videoThumbnails[id] = bytes,
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ],
             ],
           ),
-          const SizedBox(height: 20),
-          if (controller.clients.isEmpty)
-            const _EmptyStateCard(
-              title: 'No clients yet',
-              subtitle: 'Add a client to start uploading videos and photos.',
-            )
-          else ...[
-            TextField(
-              onChanged: (v) => setState(() => _clientSearch = v),
-              decoration: InputDecoration(
-                hintText: 'Search clients...',
-                prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                ),
-                filled: true,
-                fillColor: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 16),
-            for (final client in controller.clients.where((c) => c.name.toLowerCase().contains(_clientSearch.toLowerCase())).toList()) ...[
-              _ClientExpandableCard(
-                client: client,
-                controller: controller,
-                isExpanded: client.id == _selectedClientId,
-                onTap: () => setState(() => _selectedClientId =
-                    _selectedClientId == client.id ? null : client.id),
-                onEdit: () => _showEditClientDialog(client),
-                onDelete: () => _confirmDeleteClient(client),
-                onUpload: () => _showAddMediaDialog(client),
-                onDeleteMedia: _confirmDeleteMedia,
-                onAssignToScreens: (item) => _showAssignToScreensDialog(item),
-                onThumbnailCaptured: (id, bytes) =>
-                    _videoThumbnails[id] = bytes,
-              ),
-              const SizedBox(height: 12),
-            ],
-          ],
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -1352,103 +1432,119 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SurfacePanel(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Date range pickers
-                Expanded(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () async {
-                            final picked = await showDatePicker(
-                              context: context,
-                              initialDate: _customStartDate,
-                              firstDate: DateTime(2020),
-                              lastDate: DateTime.now(),
-                            );
-                            if (picked != null)
-                              setState(() => _customStartDate = picked);
-                          },
-                          icon: const Icon(Icons.calendar_today, size: 16),
-                          label: Text('From: ${_formatDate(_customStartDate)}'),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () async {
-                            final picked = await showDatePicker(
-                              context: context,
-                              initialDate: _customEndDate,
-                              firstDate: DateTime(2020),
-                              lastDate: DateTime.now(),
-                            );
-                            if (picked != null)
-                              setState(() => _customEndDate = picked);
-                          },
-                          icon: const Icon(Icons.calendar_today, size: 16),
-                          label: Text('To: ${_formatDate(_customEndDate)}'),
-                        ),
-                      ),
-                    ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final stack = constraints.maxWidth < 780;
+              final dateRange = Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: _customStartDate,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime.now(),
+                        );
+                        if (picked != null) {
+                          setState(() => _customStartDate = picked);
+                        }
+                      },
+                      icon: const Icon(Icons.calendar_today, size: 16),
+                      label: Text('From: ${_formatDate(_customStartDate)}'),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                // View toggle
-                Row(
-                  children: [
-                    _ViewToggleButton(
-                      label: 'Screens',
-                      icon: Icons.tv_rounded,
-                      selected: _reportFilterClientId == null,
-                      onTap: () => setState(() {
-                        _reportFilterClientId = null;
-                        _reportFilterScreenId = null;
-                      }),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: _customEndDate,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime.now(),
+                        );
+                        if (picked != null) {
+                          setState(() => _customEndDate = picked);
+                        }
+                      },
+                      icon: const Icon(Icons.calendar_today, size: 16),
+                      label: Text('To: ${_formatDate(_customEndDate)}'),
                     ),
-                    const SizedBox(width: 8),
-                    _ViewToggleButton(
-                      label: 'Clients',
-                      icon: Icons.groups_rounded,
-                      selected: _reportFilterClientId != null,
-                      onTap: () => setState(() {
-                        _reportFilterScreenId = null;
-                        _reportFilterClientId = controller.clients.isNotEmpty
-                            ? controller.clients.first.id
-                            : null;
-                      }),
+                  ),
+                ],
+              );
+              final toggles = Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: stack ? WrapAlignment.start : WrapAlignment.end,
+                children: [
+                  _ViewToggleButton(
+                    label: 'Screens',
+                    icon: Icons.tv_rounded,
+                    selected: _reportFilterClientId == null,
+                    onTap: () => setState(() {
+                      _reportFilterClientId = null;
+                      _reportFilterScreenId = null;
+                    }),
+                  ),
+                  _ViewToggleButton(
+                    label: 'Clients',
+                    icon: Icons.groups_rounded,
+                    selected: _reportFilterClientId != null,
+                    onTap: () => setState(() {
+                      _reportFilterScreenId = null;
+                      _reportFilterClientId = controller.clients.isNotEmpty
+                          ? controller.clients.first.id
+                          : null;
+                      _reportClientSearch = '';
+                    }),
+                  ),
+                  if (_reportFilterClientId != null)
+                    FilledButton.icon(
+                      onPressed: controller.clients.isEmpty
+                          ? null
+                          : () async {
+                              final client = controller.clients.firstWhere(
+                                (c) => c.id == _reportFilterClientId,
+                                orElse: () => controller.clients.first,
+                              );
+                              await _AdminDashboardPageState
+                                  ._downloadClientReportDirect(
+                                context,
+                                controller,
+                                client,
+                                _videoThumbnails,
+                                _customStartDate,
+                                _customEndDate,
+                              );
+                            },
+                      icon: const Icon(Icons.download_outlined, size: 16),
+                      label: const Text('Download PDF'),
                     ),
-                    if (_reportFilterClientId != null) ...[
-                      const SizedBox(width: 8),
-                      FilledButton.icon(
-                        onPressed: controller.clients.isEmpty
-                            ? null
-                            : () async {
-                                final client = controller.clients.firstWhere(
-                                  (c) => c.id == _reportFilterClientId,
-                                  orElse: () => controller.clients.first,
-                                );
-                                await _AdminDashboardPageState
-                                    ._downloadClientReportDirect(
-                                  context,
-                                  controller,
-                                  client,
-                                  _videoThumbnails,
-                                  _customStartDate,
-                                  _customEndDate,
-                                );
-                              },
-                        icon: const Icon(Icons.download_outlined, size: 16),
-                        label: const Text('Download PDF'),
+                ],
+              );
+
+              return _SurfacePanel(
+                child: stack
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          dateRange,
+                          const SizedBox(height: 16),
+                          toggles,
+                        ],
+                      )
+                    : Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(child: dateRange),
+                          const SizedBox(width: 16),
+                          toggles,
+                        ],
                       ),
-                    ],
-                  ],
-                ),
-              ],
-            ),
+              );
+            },
           ),
           const SizedBox(height: 20),
 
@@ -1519,34 +1615,88 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       compact: true,
                     )
                   else
-                    Column(
-                      children: [
-                        for (int cidx = 0;
-                            cidx < controller.clients.length;
-                            cidx++) ...[
-                          _ClientReportCard(
-                            client: controller.clients[cidx],
-                            controller: controller,
-                            videoThumbnails: _videoThumbnails,
-                            from: _reportDateRange.from,
-                            to: _reportDateRange.to,
-                            isExpanded: _expandedReportCardId ==
-                                controller.clients[cidx].id,
-                            onToggle: () {
-                              setState(() {
-                                final clientId = controller.clients[cidx].id;
-                                if (_expandedReportCardId == clientId) {
-                                  _expandedReportCardId = null;
-                                } else {
-                                  _expandedReportCardId = clientId;
-                                }
-                              });
-                            },
-                          ),
-                          if (cidx < controller.clients.length - 1)
+                    Builder(
+                      builder: (context) {
+                        final search = _reportClientSearch.trim().toLowerCase();
+                        final filteredClients = controller.clients
+                            .where(
+                              (client) => search.isEmpty ||
+                                  client.name.toLowerCase().contains(search),
+                            )
+                            .toList();
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            TextField(
+                              onChanged: (value) =>
+                                  setState(() => _reportClientSearch = value),
+                              decoration: InputDecoration(
+                                hintText: 'Search clients in reports...',
+                                prefixIcon:
+                                    const Icon(Icons.search_rounded, size: 20),
+                                isDense: true,
+                                contentPadding:
+                                    const EdgeInsets.symmetric(vertical: 10),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFFE5E7EB),
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFFE5E7EB),
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: Colors.white,
+                              ),
+                            ),
                             const SizedBox(height: 16),
-                        ],
-                      ],
+                            if (filteredClients.isEmpty)
+                              const _EmptyStateCard(
+                                title: 'No matching clients',
+                                subtitle:
+                                    'Try a different search term to find a client report.',
+                                compact: true,
+                              )
+                            else
+                              Column(
+                                children: [
+                                  for (int index = 0;
+                                      index < filteredClients.length;
+                                      index++) ...[
+                                    _ClientReportCard(
+                                      client: filteredClients[index],
+                                      controller: controller,
+                                      videoThumbnails: _videoThumbnails,
+                                      from: _reportDateRange.from,
+                                      to: _reportDateRange.to,
+                                      isExpanded: _expandedReportCardId ==
+                                          filteredClients[index].id,
+                                      onToggle: () {
+                                        setState(() {
+                                          final clientId =
+                                              filteredClients[index].id;
+                                          if (_expandedReportCardId ==
+                                              clientId) {
+                                            _expandedReportCardId = null;
+                                          } else {
+                                            _expandedReportCardId = clientId;
+                                          }
+                                        });
+                                      },
+                                    ),
+                                    if (index < filteredClients.length - 1)
+                                      const SizedBox(height: 16),
+                                  ],
+                                ],
+                              ),
+                          ],
+                        );
+                      },
                     ),
                 ],
               ],
@@ -1574,7 +1724,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         return AlertDialog(
           title: const Text('Admin Profile'),
           content: SizedBox(
-            width: 520,
+            width: _dialogContentWidth(context, 520),
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -1657,6 +1807,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _selectedPlayerClientId = null;
       _reportFilterClientId = null;
       _reportFilterScreenId = null;
+      _reportClientSearch = '';
       _expandedReportCardId = null;
     });
     _showMessage('Clients, media, and plays cleared.');
@@ -1673,7 +1824,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       builder: (context) => AlertDialog(
         title: const Text('Add Screen'),
         content: SizedBox(
-          width: 420,
+          width: _dialogContentWidth(context, 420),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1732,7 +1883,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       builder: (context) => AlertDialog(
         title: const Text('Edit Screen'),
         content: SizedBox(
-          width: 420,
+          width: _dialogContentWidth(context, 420),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1824,7 +1975,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       builder: (context) => AlertDialog(
         title: Text(client == null ? 'Add Client' : 'Edit Client'),
         content: SizedBox(
-          width: 460,
+          width: _dialogContentWidth(context, 460),
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -1890,7 +2041,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         builder: (context, setDialogState) => AlertDialog(
           title: Text('Upload Media for ${client.name}'),
           content: SizedBox(
-            width: 520,
+            width: _dialogContentWidth(context, 520),
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -2019,7 +2170,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         builder: (context, setDialogState) => AlertDialog(
           title: Text('Assign "${item.title}" to Screens'),
           content: SizedBox(
-            width: 400,
+            width: _dialogContentWidth(context, 400),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 400),
               child: SingleChildScrollView(
@@ -2362,7 +2513,7 @@ class _ReportPeriodDialogState extends State<_ReportPeriodDialog> {
     return AlertDialog(
       title: const Text('Select Report Period'),
       content: SizedBox(
-        width: 400,
+        width: _dialogContentWidth(context, 400),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -3281,7 +3432,7 @@ class _KpiPeriodDialogState extends State<_KpiPeriodDialog> {
     return AlertDialog(
       title: const Text('Select Period'),
       content: SizedBox(
-        width: 360,
+        width: _dialogContentWidth(context, 360),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -4154,31 +4305,60 @@ class _KeyValueRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontSize: 13,
-                color: Color(0xFF6B7280),
-                fontWeight: FontWeight.w500,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth < 360) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF6B7280),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF111827),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            );
+          }
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 100,
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF6B7280),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontSize: 13,
-                color: Color(0xFF111827),
-                fontWeight: FontWeight.w500,
+              Expanded(
+                child: Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF111827),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
-            ),
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }
@@ -4206,10 +4386,23 @@ class _MetricListTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: const Color(0xFFF3F4F6)),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final stacked = constraints.maxWidth < 360;
+          final trailingChild = trailingWidget ??
+              (trailing != null
+                  ? Text(
+                      trailing!,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF374151),
+                      ),
+                    )
+                  : const SizedBox.shrink());
+
+          if (stacked) {
+            return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -4226,20 +4419,42 @@ class _MetricListTile extends StatelessWidget {
                   style:
                       const TextStyle(color: Color(0xFF6B7280), fontSize: 13),
                 ),
+                if (trailingWidget != null || trailing != null) ...[
+                  const SizedBox(height: 8),
+                  Align(alignment: Alignment.centerLeft, child: trailingChild),
+                ],
               ],
-            ),
-          ),
-          if (trailingWidget != null) trailingWidget!,
-          if (trailingWidget == null && trailing != null)
-            Text(
-              trailing!,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF374151),
+            );
+          }
+
+          return Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF111827),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                          color: Color(0xFF6B7280), fontSize: 13),
+                    ),
+                  ],
+                ),
               ),
-            ),
-        ],
+              if (trailingWidget != null) trailingWidget!,
+              if (trailingWidget == null && trailing != null) trailingChild,
+            ],
+          );
+        },
       ),
     );
   }
@@ -5194,6 +5409,11 @@ String _formatDate(DateTime date) {
   return '${date.month}/${date.day}/${date.year}';
 }
 
+double _dialogContentWidth(BuildContext context, double desiredWidth) {
+  final availableWidth = MediaQuery.sizeOf(context).width - 32;
+  return availableWidth < desiredWidth ? availableWidth : desiredWidth;
+}
+
 class _DateRangeChip extends StatelessWidget {
   const _DateRangeChip({
     required this.label,
@@ -5276,7 +5496,7 @@ class _ReportGroupDialogState extends State<_ReportGroupDialog> {
     return AlertDialog(
       title: const Text('Download Report'),
       content: SizedBox(
-        width: 400,
+        width: _dialogContentWidth(context, 400),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
