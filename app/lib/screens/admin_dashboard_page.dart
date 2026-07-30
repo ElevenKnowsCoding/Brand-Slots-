@@ -1258,6 +1258,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     ScreenDevice screen,
   ) {
     final playlist = controller.mediaForScreen(screen.id);
+    final isPortrait =
+        screen.screenPlayerOrientation.toLowerCase() == 'portrait';
     return _SurfacePanel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1265,6 +1267,43 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           _PanelHeading(
             title: '${screen.name} Playlist',
             subtitle: 'Reorder, remove, and review what this screen will play.',
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              const Text(
+                'Screen orientation',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF10233D),
+                ),
+              ),
+              FilledButton.tonal(
+                onPressed: isPortrait
+                    ? null
+                    : () => _setScreenOrientation(screen, 'portrait'),
+                style: FilledButton.styleFrom(
+                  backgroundColor:
+                      isPortrait ? const Color(0xFFE3F1F1) : null,
+                  foregroundColor: const Color(0xFF10233D),
+                ),
+                child: const Text('Portrait'),
+              ),
+              FilledButton.tonal(
+                onPressed: isPortrait
+                    ? () => _setScreenOrientation(screen, 'landscape')
+                    : null,
+                style: FilledButton.styleFrom(
+                  backgroundColor:
+                      isPortrait ? null : const Color(0xFFE3F1F1),
+                  foregroundColor: const Color(0xFF10233D),
+                ),
+                child: const Text('Landscape'),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           if (playlist.isEmpty)
@@ -2314,6 +2353,22 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     reordered.insert(newIndex, moved);
     await widget.controller
         .updateScreen(screen.copyWith(assignedMediaIds: reordered));
+  }
+
+  Future<void> _setScreenOrientation(
+    ScreenDevice screen,
+    String screenPlayerOrientation,
+  ) async {
+    if (screen.screenPlayerOrientation.toLowerCase() ==
+        screenPlayerOrientation.toLowerCase()) {
+      return;
+    }
+    await widget.controller.updateScreen(
+      screen.copyWith(screenPlayerOrientation: screenPlayerOrientation),
+    );
+    _showMessage(
+      '${screen.name} set to ${screenPlayerOrientation.toLowerCase()}.',
+    );
   }
 
   Future<bool?> _confirm({
