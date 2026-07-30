@@ -1265,6 +1265,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           _PanelHeading(
             title: '${screen.name} Playlist',
             subtitle: 'Reorder, remove, and review what this screen will play.',
+            trailingWidget: _OrientationToggle(
+              orientation: controller.organization.screenPlayerOrientation,
+              onLandscape: () => _setScreenPlayerOrientation('landscape'),
+              onPortrait: () => _setScreenPlayerOrientation('portrait'),
+            ),
           ),
           const SizedBox(height: 16),
           if (playlist.isEmpty)
@@ -1683,83 +1688,48 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     final apkBaseController = TextEditingController(text: profile.apkBaseUrl);
     final localPathController =
         TextEditingController(text: profile.localProjectPath);
-    var selectedOrientation = profile.screenPlayerOrientation.isEmpty
-        ? 'landscape'
-        : profile.screenPlayerOrientation;
 
     final saved = await showDialog<bool>(
       context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: const Text('Admin Profile'),
-              content: SizedBox(
-                width: _dialogContentWidth(context, 520),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _DialogField(
-                          label: 'Company name', controller: companyController),
-                      _DialogField(
-                          label: 'Admin name', controller: adminController),
-                      _DialogField(
-                          label: 'Admin email', controller: emailController),
-                      _DialogField(label: 'Phone', controller: phoneController),
-                      _DialogField(
-                        label: 'Welcome message',
-                        controller: welcomeController,
-                        maxLines: 3,
-                      ),
-                      _DialogField(
-                          label: 'APK base URL', controller: apkBaseController),
-                      _DialogField(
-                        label: 'Local project path',
-                        controller: localPathController,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: DropdownButtonFormField<String>(
-                          initialValue: selectedOrientation,
-                          decoration: const InputDecoration(
-                            labelText: 'Screen player orientation',
-                            border: OutlineInputBorder(),
-                          ),
-                          items: const [
-                            DropdownMenuItem(
-                              value: 'landscape',
-                              child: Text('Landscape'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'portrait',
-                              child: Text('Portrait'),
-                            ),
-                          ],
-                          onChanged: (value) {
-                            if (value == null) return;
-                            setDialogState(() => selectedOrientation = value);
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
+      builder: (context) => AlertDialog(
+        title: const Text('Admin Profile'),
+        content: SizedBox(
+          width: _dialogContentWidth(context, 520),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _DialogField(
+                    label: 'Company name', controller: companyController),
+                _DialogField(label: 'Admin name', controller: adminController),
+                _DialogField(label: 'Admin email', controller: emailController),
+                _DialogField(label: 'Phone', controller: phoneController),
+                _DialogField(
+                  label: 'Welcome message',
+                  controller: welcomeController,
+                  maxLines: 3,
                 ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('Cancel'),
-                ),
-                FilledButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  child: const Text('Save'),
+                _DialogField(
+                    label: 'APK base URL', controller: apkBaseController),
+                _DialogField(
+                  label: 'Local project path',
+                  controller: localPathController,
                 ),
               ],
-            );
-          },
-        );
-      },
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
     );
 
     if (saved != true) return;
@@ -1780,10 +1750,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         welcomeMessage: welcomeController.text.trim(),
         apkBaseUrl: apkBaseController.text.trim(),
         localProjectPath: localPathController.text.trim(),
-        screenPlayerOrientation: selectedOrientation,
       ),
     );
     _showMessage('Admin profile updated.');
+  }
+
+  Future<void> _setScreenPlayerOrientation(String orientation) async {
+    final current = widget.controller.organization.screenPlayerOrientation;
+    if (current == orientation) return;
+    await widget.controller.updateOrganization(
+      widget.controller.organization.copyWith(
+        screenPlayerOrientation: orientation,
+      ),
+    );
   }
 
   Future<void> _confirmAndResetContent() async {
@@ -4204,28 +4183,140 @@ class _SurfacePanel extends StatelessWidget {
 }
 
 class _PanelHeading extends StatelessWidget {
-  const _PanelHeading({required this.title, required this.subtitle});
+  const _PanelHeading({
+    required this.title,
+    required this.subtitle,
+    this.trailingWidget,
+  });
 
   final String title;
   final String subtitle;
+  final Widget? trailingWidget;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF111827),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final stacked = constraints.maxWidth < 360;
+        final heading = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF111827),
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: const TextStyle(color: Color(0xFF6B7280), fontSize: 13),
+            ),
+          ],
+        );
+
+        if (trailingWidget == null) return heading;
+
+        if (stacked) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              heading,
+              const SizedBox(height: 10),
+              trailingWidget!,
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(child: heading),
+            const SizedBox(width: 12),
+            trailingWidget!,
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _OrientationToggle extends StatelessWidget {
+  const _OrientationToggle({
+    required this.orientation,
+    required this.onPortrait,
+    required this.onLandscape,
+  });
+
+  final String orientation;
+  final VoidCallback onPortrait;
+  final VoidCallback onLandscape;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget chip({
+      required String label,
+      required IconData icon,
+      required bool selected,
+      required VoidCallback onTap,
+    }) {
+      return Material(
+        color: selected ? const Color(0xFF111827) : const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(999),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(999),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(
+                color: selected
+                    ? const Color(0xFF111827)
+                    : const Color(0xFFE5E7EB),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  size: 14,
+                  color: selected ? Colors.white : const Color(0xFF6B7280),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: selected ? Colors.white : const Color(0xFF374151),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        const SizedBox(height: 2),
-        Text(
-          subtitle,
-          style: const TextStyle(color: Color(0xFF6B7280), fontSize: 13),
+      );
+    }
+
+    final isPortrait = orientation.toLowerCase() == 'portrait';
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        chip(
+          label: 'Portrait',
+          icon: Icons.stay_current_portrait_rounded,
+          selected: isPortrait,
+          onTap: onPortrait,
+        ),
+        chip(
+          label: 'Landscape',
+          icon: Icons.stay_current_landscape_rounded,
+          selected: !isPortrait,
+          onTap: onLandscape,
         ),
       ],
     );
