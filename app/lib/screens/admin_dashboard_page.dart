@@ -4803,11 +4803,11 @@ class _NowPlayingBadge extends StatelessWidget {
 }
 
 bool _isNowPlaying(ScreenDevice screen) {
-  final ts = screen.lastPlaybackAt;
-  if (ts == null || ts.isEmpty) return false;
-  final last = DateTime.tryParse(ts);
+  final activity = screen.lastSeenAt ?? screen.lastPlaybackAt;
+  if (activity == null || activity.isEmpty) return false;
+  final last = DateTime.tryParse(activity);
   if (last == null) return false;
-  return DateTime.now().difference(last).inSeconds <= 10;
+  return DateTime.now().difference(last).inMinutes <= 2;
 }
 
 class _SelectableTileWithDelete extends StatelessWidget {

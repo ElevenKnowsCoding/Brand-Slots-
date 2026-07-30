@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field, unused_local_variable, unused_element, unnecessary_cast
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -9,6 +11,7 @@ import '../services/screen_media_cache.dart';
 import '../state/app_controller.dart';
 
 enum _StatPeriod { daily, weekly, monthly, yearly, custom }
+enum _PlayerOrientation { portrait, landscape }
 
 class ScreenPlayerPage extends StatefulWidget {
   const ScreenPlayerPage({super.key, required this.controller});
@@ -28,11 +31,14 @@ class _ScreenPlayerPageState extends State<ScreenPlayerPage> {
   bool _hasPendingPlaylistRefresh = false;
   Timer? _imageTimer;
   Timer? _midnightTimer;
+  Timer? _heartbeatTimer;
   VideoPlayerController? _videoController;
   ImageProvider<Object>? _imageProvider;
   late final ScreenMediaCache _mediaCache;
   String _playlistSignature = '';
   DateTime _currentDay = DateTime.now();
+  _PlayerOrientation _playerOrientation = _PlayerOrientation.landscape;
+  bool _playerOrientationApplied = false;
 
   // Stats overlay
   _StatPeriod _statPeriod = _StatPeriod.daily;
@@ -48,7 +54,23 @@ class _ScreenPlayerPageState extends State<ScreenPlayerPage> {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     _playlistSignature = _buildPlaylistSignature(_media);
     WidgetsBinding.instance.addPostFrameCallback((_) => _prepareCurrentMedia());
+    _sendHeartbeat();
+    _heartbeatTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _sendHeartbeat(),
+    );
     _scheduleMidnightCheck();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_playerOrientationApplied) return;
+    _playerOrientationApplied = true;
+    _playerOrientation = MediaQuery.orientationOf(context) == Orientation.landscape
+        ? _PlayerOrientation.landscape
+        : _PlayerOrientation.portrait;
+    unawaited(_applyPlayerOrientation(_playerOrientation));
   }
 
   @override
@@ -65,10 +87,36 @@ class _ScreenPlayerPageState extends State<ScreenPlayerPage> {
   void dispose() {
     widget.controller.removeListener(_handleControllerUpdate);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setPreferredOrientations(DeviceOrientation.values);
     _imageTimer?.cancel();
     _midnightTimer?.cancel();
+    _heartbeatTimer?.cancel();
     _disposeVideo();
     super.dispose();
+  }
+
+  Future<void> _sendHeartbeat() async {
+    final screen = widget.controller.activeScreen;
+    if (screen == null) return;
+    await widget.controller.updateScreen(
+      screen.copyWith(lastSeenAt: DateTime.now().toIso8601String()),
+    );
+  }
+
+  Future<void> _applyPlayerOrientation(_PlayerOrientation orientation) async {
+    final orientations = orientation == _PlayerOrientation.portrait
+        ? const [DeviceOrientation.portraitUp]
+        : const [
+            DeviceOrientation.landscapeLeft,
+            DeviceOrientation.landscapeRight,
+          ];
+    await SystemChrome.setPreferredOrientations(orientations);
+  }
+
+  Future<void> _setPlayerOrientation(_PlayerOrientation orientation) async {
+    if (_playerOrientation == orientation) return;
+    setState(() => _playerOrientation = orientation);
+    await _applyPlayerOrientation(orientation);
   }
 
   List<MediaItem> get _media {
@@ -128,8 +176,9 @@ class _ScreenPlayerPageState extends State<ScreenPlayerPage> {
   }
 
   Future<void> _prepareCurrentMedia() async {
+    final activeScreen = widget.controller.activeScreen;
     final media = _media;
-    if (media.isEmpty) {
+    if (activeScreen == null || media.isEmpty) {
       _imageTimer?.cancel();
       _disposeVideo();
       if (mounted) {
@@ -153,6 +202,7 @@ class _ScreenPlayerPageState extends State<ScreenPlayerPage> {
     final token = ++_loadToken;
 
     _imageTimer?.cancel();
+    await _sendHeartbeat();
 
     if (current.kind == MediaKind.image) {
       late final PreparedMediaImage prepared;
@@ -180,6 +230,13 @@ class _ScreenPlayerPageState extends State<ScreenPlayerPage> {
         _imageProvider = prepared.provider;
         _isAdvancing = false;
       });
+      unawaited(
+        widget.controller.reportScreenPlayback(
+          screenId: activeScreen.id,
+          mediaId: current.id,
+          completedRound: media.length == 1,
+        ),
+      );
       _imageTimer = Timer(Duration(seconds: current.durationSeconds), _advance);
       return;
     }
@@ -225,6 +282,13 @@ class _ScreenPlayerPageState extends State<ScreenPlayerPage> {
 
     await oldController?.dispose();
     await controller.play();
+    unawaited(
+      widget.controller.reportScreenPlayback(
+        screenId: activeScreen.id,
+        mediaId: current.id,
+        completedRound: media.length == 1,
+      ),
+    );
   }
 
   void _advance() {
@@ -238,10 +302,7 @@ class _ScreenPlayerPageState extends State<ScreenPlayerPage> {
     final currentPosition = visibleItem == null
         ? -1
         : media.indexWhere((item) => item.id == visibleItem.id);
-    final completedRound = media.length == 1 ||
-        (currentPosition != -1 && currentPosition == media.length - 1);
     final fallbackIndex = _visibleIndex.clamp(0, media.length - 1) as int;
-    final playedMediaId = visibleItem?.id ?? media[fallbackIndex].id;
 
     final videoDuration = _videoController?.value.duration;
     if (visibleItem != null &&
@@ -258,13 +319,6 @@ class _ScreenPlayerPageState extends State<ScreenPlayerPage> {
     }
 
     _isAdvancing = true;
-    unawaited(
-      widget.controller.reportScreenPlayback(
-        screenId: screen.id,
-        mediaId: playedMediaId,
-        completedRound: completedRound,
-      ),
-    );
 
     setState(() {
       if (_hasPendingPlaylistRefresh) {
@@ -431,7 +485,26 @@ class _ScreenPlayerPageState extends State<ScreenPlayerPage> {
                             )
                           : _buildFallback(current),
             ),
-
+            Positioned(
+              top: 16,
+              left: 16,
+              right: 16,
+              child: SafeArea(
+                bottom: false,
+                child: Row(
+                  children: [
+                    _OrientationControl(
+                      orientation: _playerOrientation,
+                      onPortrait: () =>
+                          _setPlayerOrientation(_PlayerOrientation.portrait),
+                      onLandscape: () =>
+                          _setPlayerOrientation(_PlayerOrientation.landscape),
+                    ),
+                    const Spacer(),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -630,6 +703,91 @@ class _StatPeriodSheetState extends State<_StatPeriodSheet> {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _OrientationControl extends StatelessWidget {
+  const _OrientationControl({
+    required this.orientation,
+    required this.onPortrait,
+    required this.onLandscape,
+  });
+
+  final _PlayerOrientation orientation;
+  final VoidCallback onPortrait;
+  final VoidCallback onLandscape;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget chip({
+      required String label,
+      required IconData icon,
+      required bool selected,
+      required VoidCallback onTap,
+    }) {
+      return Material(
+        color: selected ? Colors.white : const Color(0x1AFFFFFF),
+        borderRadius: BorderRadius.circular(999),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(999),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(
+                color: selected ? Colors.white : const Color(0x33FFFFFF),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  size: 14,
+                  color: selected ? Colors.black : Colors.white,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: selected ? Colors.black : Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: const Color(0x66000000),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          chip(
+            label: 'Portrait',
+            icon: Icons.stay_current_portrait_rounded,
+            selected: orientation == _PlayerOrientation.portrait,
+            onTap: onPortrait,
+          ),
+          const SizedBox(width: 6),
+          chip(
+            label: 'Landscape',
+            icon: Icons.stay_current_landscape_rounded,
+            selected: orientation == _PlayerOrientation.landscape,
+            onTap: onLandscape,
+          ),
+        ],
       ),
     );
   }
