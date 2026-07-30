@@ -1196,58 +1196,71 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               compact: true,
             )
           else
-            for (final item in mediaItems) ...[
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (item.url.isNotEmpty)
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: item.kind == MediaKind.image
-                            ? Image.network(
-                                item.url,
-                                height: 120,
-                                width: double.infinity,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) =>
-                                    _MediaPlaceholder(kind: item.kind),
-                              )
-                            : SizedBox(
-                                height: 120,
-                                child: _VideoPreviewTile(
-                                    url: item.url,
-                                    mediaId: item.id,
-                                    controller: controller,
-                                    onThumbnailCaptured: (id, bytes) =>
-                                        _videoThumbnails[id] = bytes),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 520),
+              child: Scrollbar(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      for (final item in mediaItems) ...[
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (item.url.isNotEmpty)
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: item.kind == MediaKind.image
+                                      ? Image.network(
+                                          item.url,
+                                          height: 120,
+                                          width: double.infinity,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) =>
+                                              _MediaPlaceholder(
+                                                  kind: item.kind),
+                                        )
+                                      : SizedBox(
+                                          height: 120,
+                                          child: _VideoPreviewTile(
+                                              url: item.url,
+                                              mediaId: item.id,
+                                              controller: controller,
+                                              onThumbnailCaptured: (id, bytes) =>
+                                                  _videoThumbnails[id] = bytes),
+                                        ),
+                                )
+                              else
+                                SizedBox(
+                                  height: 120,
+                                  child: _MediaPlaceholder(kind: item.kind),
+                                ),
+                              const SizedBox(height: 8),
+                              _MetricListTile(
+                                title: item.title,
+                                subtitle: _clientName(controller, item.clientId),
+                                trailingWidget: FilledButton.tonal(
+                                  onPressed: screen.assignedMediaIds
+                                          .contains(item.id)
+                                      ? null
+                                      : () => _addMediaToScreen(screen, item.id),
+                                  child: Text(
+                                    screen.assignedMediaIds.contains(item.id)
+                                        ? 'Added'
+                                        : 'Add',
+                                  ),
+                                ),
                               ),
-                      )
-                    else
-                      SizedBox(
-                        height: 120,
-                        child: _MediaPlaceholder(kind: item.kind),
-                      ),
-                    const SizedBox(height: 8),
-                    _MetricListTile(
-                      title: item.title,
-                      subtitle: _clientName(controller, item.clientId),
-                      trailingWidget: FilledButton.tonal(
-                        onPressed: screen.assignedMediaIds.contains(item.id)
-                            ? null
-                            : () => _addMediaToScreen(screen, item.id),
-                        child: Text(
-                          screen.assignedMediaIds.contains(item.id)
-                              ? 'Added'
-                              : 'Add',
+                            ],
+                          ),
                         ),
-                      ),
-                    ),
-                  ],
+                      ],
+                    ],
+                  ),
                 ),
               ),
-            ],
+            ),
         ],
       ),
     );
