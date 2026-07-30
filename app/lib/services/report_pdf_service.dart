@@ -201,79 +201,85 @@ class ReportPdfService {
 
             final sortedPeriods = periodPlays.keys.toList()..sort();
 
-            widgets.add(pw.Container(
-              margin: const pw.EdgeInsets.only(bottom: 12),
-              decoration: pw.BoxDecoration(
-                border: pw.Border.all(color: _borderGrey, width: 0.8),
-                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
-              ),
-              child: pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  pw.Container(
-                    padding: const pw.EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    decoration: const pw.BoxDecoration(
-                      color: _navy,
-                      borderRadius: pw.BorderRadius.only(
-                        topLeft: pw.Radius.circular(5),
-                        topRight: pw.Radius.circular(5),
+            widgets.add(
+              pw.Container(
+                padding: const pw.EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: pw.BoxDecoration(
+                  color: _navy,
+                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
+                ),
+                child: pw.Row(
+                  children: [
+                    pw.Expanded(
+                      child: pw.Text(
+                        '${item.kind == MediaKind.video ? 'VIDEO' : 'IMAGE'} ${i + 1}  —  ${item.title}',
+                        style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: _white),
                       ),
                     ),
-                    child: pw.Row(
-                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                      children: [
-                        pw.Text(
-                          '${item.kind == MediaKind.video ? 'VIDEO' : 'IMAGE'} ${i + 1}  â€”  ${item.title}',
-                          style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: _white),
-                        ),
-                        pw.Text(
-                          '${summary.playCount} plays  |  ${_dur(summary.playTimeSeconds)}',
-                          style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: _accentBlue),
-                        ),
-                      ],
+                    pw.SizedBox(width: 12),
+                    pw.Text(
+                      '${summary.playCount} plays  |  ${_dur(summary.playTimeSeconds)}',
+                      style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: _accentBlue),
                     ),
+                  ],
+                ),
+              ),
+            );
+
+            if (screenLines.isNotEmpty) {
+              widgets.add(
+                pw.Padding(
+                  padding: const pw.EdgeInsets.fromLTRB(14, 8, 14, 0),
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: screenLines
+                        .map(
+                          (line) => pw.Padding(
+                            padding: const pw.EdgeInsets.only(bottom: 4),
+                            child: pw.Text(
+                              line,
+                              style: const pw.TextStyle(fontSize: 9, color: _textDark),
+                            ),
+                          ),
+                        )
+                        .toList(),
                   ),
-                  if (screenLines.isNotEmpty)
-                    pw.Padding(
-                      padding: const pw.EdgeInsets.fromLTRB(14, 10, 14, 0),
-                      child: pw.Column(
-                        crossAxisAlignment: pw.CrossAxisAlignment.start,
-                        children: screenLines.map((line) => pw.Padding(
-                          padding: const pw.EdgeInsets.only(bottom: 4),
-                          child: pw.Text(line, style: const pw.TextStyle(fontSize: 9, color: _textDark)),
-                        )).toList(),
+                ),
+              );
+            }
+
+            if (sortedPeriods.isNotEmpty) {
+              widgets.add(
+                pw.Padding(
+                  padding: const pw.EdgeInsets.fromLTRB(14, 10, 14, 0),
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text(
+                        groupBy == ReportGroupBy.daily ? 'Daily Breakdown' : 'Monthly Breakdown',
+                        style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold, color: _textMid),
                       ),
-                    ),
-                  if (sortedPeriods.isNotEmpty)
-                    pw.Padding(
-                      padding: const pw.EdgeInsets.fromLTRB(14, 10, 14, 12),
-                      child: pw.Column(
-                        crossAxisAlignment: pw.CrossAxisAlignment.start,
-                        children: [
-                          pw.Text(
-                            groupBy == ReportGroupBy.daily ? 'Daily Breakdown' : 'Monthly Breakdown',
-                            style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold, color: _textMid),
-                          ),
-                          pw.SizedBox(height: 6),
-                          pw.Table.fromTextArray(
-                            headers: [groupBy == ReportGroupBy.daily ? 'DATE' : 'MONTH', 'PLAYS'],
-                            data: sortedPeriods.map((k) => [_formatPeriodKey(k, groupBy), '${periodPlays[k]}']).toList(),
-                            headerStyle: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold, color: _white),
-                            headerDecoration: const pw.BoxDecoration(color: _blue),
-                            cellStyle: const pw.TextStyle(fontSize: 9, color: _textDark),
-                            oddRowDecoration: const pw.BoxDecoration(color: _rowAlt),
-                            border: pw.TableBorder.all(color: _borderGrey, width: 0.4),
-                            cellAlignments: {0: pw.Alignment.centerLeft, 1: pw.Alignment.center},
-                            cellPadding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                          ),
-                        ],
+                      pw.SizedBox(height: 6),
+                      pw.Table.fromTextArray(
+                        headers: [groupBy == ReportGroupBy.daily ? 'DATE' : 'MONTH', 'PLAYS'],
+                        data: sortedPeriods
+                            .map((k) => [_formatPeriodKey(k, groupBy), '${periodPlays[k]}'])
+                            .toList(),
+                        headerStyle: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold, color: _white),
+                        headerDecoration: const pw.BoxDecoration(color: _blue),
+                        cellStyle: const pw.TextStyle(fontSize: 9, color: _textDark),
+                        oddRowDecoration: const pw.BoxDecoration(color: _rowAlt),
+                        border: pw.TableBorder.all(color: _borderGrey, width: 0.4),
+                        cellAlignments: {0: pw.Alignment.centerLeft, 1: pw.Alignment.center},
+                        cellPadding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                       ),
-                    )
-                  else
-                    pw.SizedBox(height: 10),
-                ],
-              ),
-            ));
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            widgets.add(pw.SizedBox(height: 14));
           }
 
           widgets.add(pw.Container(
