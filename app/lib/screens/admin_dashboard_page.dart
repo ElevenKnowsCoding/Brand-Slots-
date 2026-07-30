@@ -1329,6 +1329,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 520),
               child: ReorderableListView.builder(
+                padding: const EdgeInsets.only(bottom: 16),
                 itemCount: playlist.length,
                 onReorder: (oldIndex, newIndex) =>
                     _reorderPlaylist(screen, oldIndex, newIndex),
