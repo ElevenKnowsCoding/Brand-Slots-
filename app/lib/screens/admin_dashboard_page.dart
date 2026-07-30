@@ -1,5 +1,6 @@
+// ignore_for_file: unused_import, unused_field, unused_element, unused_local_variable, unused_element_parameter
+
 import 'dart:async';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -10,7 +11,6 @@ import '../services/video_thumbnail_stub.dart'
 import '../services/pdf_download_stub.dart'
     if (dart.library.js_interop) '../services/pdf_download_web.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:printing/printing.dart';
 import 'package:video_player/video_player.dart';
 
 import '../models/app_models.dart';
@@ -34,9 +34,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   _AdminSection _section = _AdminSection.dashboard;
   String? _selectedClientId;
   String? _selectedScreenId;
-  DateTime _customStartDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
-  DateTime _customEndDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
-  String? _reportFilterScreenId;
+  DateTime _customStartDate =
+      DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+  DateTime _customEndDate =
+      DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
   String? _reportFilterClientId;
   String _reportClientSearch = '';
   String? _expandedReportCardId;
@@ -46,9 +47,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   String _clientSearch = '';
   String? _selectedPlayerClientId;
   final Map<String, Uint8List> _videoThumbnails = {};
-
-  static DateTime _monday(DateTime d) =>
-      d.subtract(Duration(days: d.weekday - 1));
 
   @override
   void initState() {
@@ -271,7 +269,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final w = constraints.maxWidth;
-        final isCompact = w < 720;
         final statCardWidth = w < 520
             ? w
             : w < 980
@@ -400,82 +397,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             ],
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildAdminProfilePanel(AppController controller) {
-    return _SurfacePanel(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const _PanelHeading(
-              title: 'Admin Profile',
-              subtitle: 'Company and admin settings for this dashboard.'),
-          const SizedBox(height: 20),
-          _KeyValueRow(
-              label: 'Company',
-              value: controller.organization.companyName.isEmpty
-                  ? 'Not set'
-                  : controller.organization.companyName),
-          _KeyValueRow(
-              label: 'Admin',
-              value: controller.organization.adminName.isEmpty
-                  ? 'Not set'
-                  : controller.organization.adminName),
-          _KeyValueRow(
-              label: 'Email',
-              value: controller.organization.adminEmail.isEmpty
-                  ? 'Not set'
-                  : controller.organization.adminEmail),
-          _KeyValueRow(
-              label: 'Phone',
-              value: controller.organization.phone.isEmpty
-                  ? 'Not set'
-                  : controller.organization.phone),
-          const SizedBox(height: 20),
-          FilledButton.icon(
-            onPressed: () => _showOrganizationDialog(controller.organization),
-            icon: const Icon(Icons.edit_outlined),
-            label: const Text('Edit Admin Profile'),
-          ),
-          const SizedBox(height: 10),
-          OutlinedButton.icon(
-            onPressed: () => _confirmAndResetContent(),
-            icon: const Icon(Icons.delete_forever_rounded),
-            label: const Text('Reset Clients, Media & Analytics'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFFB91C1C),
-              side: const BorderSide(color: Color(0xFFFCA5A5)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBusiestMediaPanel(AppController controller) {
-    return _SurfacePanel(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const _PanelHeading(
-              title: 'Busiest Media',
-              subtitle: 'Top assets based on tracked plays.'),
-          const SizedBox(height: 20),
-          if (controller.mediaItems.isEmpty)
-            const Text('No media uploaded yet. Start in the Clients section.',
-                style: TextStyle(color: Color(0xFF5A6B80)))
-          else
-            for (final summary in _topMediaSummaries(controller)) ...[
-              _MetricListTile(
-                title: summary.media.title,
-                subtitle: _clientName(controller, summary.media.clientId),
-                trailing: '${summary.playCount} plays',
-              ),
-              const SizedBox(height: 8),
-            ],
-        ],
       ),
     );
   }
@@ -628,63 +549,80 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         .toList()
       ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final stackHeader = constraints.maxWidth < 700;
+        final narrowCards = constraints.maxWidth < 520;
+        final crossAxisCount =
+            narrowCards ? 1 : (constraints.maxWidth / 380).floor().clamp(1, 4);
+        final mainAxisExtent = narrowCards ? 460.0 : 380.0;
+
+        final searchField = TextField(
+          onChanged: (v) => setState(() => _screenSearch = v),
+          decoration: InputDecoration(
+            hintText: 'Search screens...',
+            prefixIcon: const Icon(Icons.search_rounded, size: 20),
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(vertical: 10),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+          ),
+        );
+
+        final addButton = FilledButton.icon(
+          onPressed: _showAddScreenDialog,
+          icon: const Icon(Icons.add_rounded),
+          label: const Text('Add Screen'),
+        );
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: TextField(
-                onChanged: (v) => setState(() => _screenSearch = v),
-                decoration: InputDecoration(
-                  hintText: 'Search screens...',
-                  prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                  isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                  ),
-                  filled: true,
-                  fillColor: Colors.white,
-                ),
+            if (stackHeader)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  searchField,
+                  const SizedBox(height: 12),
+                  addButton,
+                ],
+              )
+            else
+              Row(
+                children: [
+                  Expanded(child: searchField),
+                  const SizedBox(width: 12),
+                  addButton,
+                ],
               ),
-            ),
-            const SizedBox(width: 12),
-            FilledButton.icon(
-              onPressed: _showAddScreenDialog,
-              icon: const Icon(Icons.add_rounded),
-              label: const Text('Add Screen'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        if (controller.screens.isEmpty)
-          const _EmptyStateCard(
-            title: 'No screens registered',
-            subtitle: 'Add a screen to create a unique screen player account.',
-          )
-        else if (filtered.isEmpty)
-          const _EmptyStateCard(
-            title: 'No screens found',
-            subtitle: 'Try a different search term.',
-          )
-        else
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final crossAxisCount =
-                    (constraints.maxWidth / 380).floor().clamp(1, 4);
-                return GridView.builder(
+            const SizedBox(height: 16),
+            if (controller.screens.isEmpty)
+              const _EmptyStateCard(
+                title: 'No screens registered',
+                subtitle:
+                    'Add a screen to create a unique screen player account.',
+              )
+            else if (filtered.isEmpty)
+              const _EmptyStateCard(
+                title: 'No screens found',
+                subtitle: 'Try a different search term.',
+              )
+            else
+              Expanded(
+                child: GridView.builder(
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: crossAxisCount,
                     crossAxisSpacing: 20,
                     mainAxisSpacing: 20,
-                    childAspectRatio: 1.15,
+                    mainAxisExtent: mainAxisExtent,
                   ),
                   itemCount: filtered.length,
                   itemBuilder: (context, index) {
@@ -824,11 +762,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       ),
                     );
                   },
-                );
-              },
-            ),
-          ),
-      ],
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 
@@ -846,7 +784,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   children: [
                     const _PanelHeading(
                       title: 'Clients',
-                      subtitle: 'Click a client to view and manage their media.',
+                      subtitle:
+                          'Click a client to view and manage their media.',
                     ),
                     const SizedBox(height: 12),
                     FilledButton.icon(
@@ -878,7 +817,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               if (controller.clients.isEmpty)
                 const _EmptyStateCard(
                   title: 'No clients yet',
-                  subtitle: 'Add a client to start uploading videos and photos.',
+                  subtitle:
+                      'Add a client to start uploading videos and photos.',
                 )
               else ...[
                 TextField(
@@ -902,8 +842,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 ),
                 const SizedBox(height: 16),
                 for (final client in controller.clients
-                    .where((c) =>
-                        c.name.toLowerCase().contains(_clientSearch.toLowerCase()))
+                    .where((c) => c.name
+                        .toLowerCase()
+                        .contains(_clientSearch.toLowerCase()))
                     .toList()) ...[
                   _ClientExpandableCard(
                     client: client,
@@ -915,7 +856,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     onDelete: () => _confirmDeleteClient(client),
                     onUpload: () => _showAddMediaDialog(client),
                     onDeleteMedia: _confirmDeleteMedia,
-                    onAssignToScreens: (item) => _showAssignToScreensDialog(item),
+                    onAssignToScreens: (item) =>
+                        _showAssignToScreensDialog(item),
                     onThumbnailCaptured: (id, bytes) =>
                         _videoThumbnails[id] = bytes,
                   ),
@@ -1035,168 +977,193 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         ? null
         : controller.getScreenById(_selectedScreenId!);
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 260,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFF3F4F6)),
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final stackLayout = constraints.maxWidth < 900;
+        final leftPanel = Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFF3F4F6)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: TextField(
+                  onChanged: (v) => setState(() => _playerSearch = v),
+                  decoration: InputDecoration(
+                    hintText: 'Search screens...',
+                    prefixIcon: const Icon(Icons.search_rounded, size: 18),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                    ),
+                    filled: true,
+                    fillColor: const Color(0xFFF9FAFB),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                  children: [
+                    if (controller.screens.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.all(8),
+                        child: _EmptyStateCard(
+                          title: 'No screens',
+                          subtitle: 'Add a screen first.',
+                          compact: true,
+                        ),
+                      )
+                    else
+                      for (final screen in filteredScreens)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: _SelectableTile(
+                            title: screen.name,
+                            subtitle: '${screen.assignedMediaIds.length} items',
+                            selected: screen.id == _selectedScreenId,
+                            onTap: () =>
+                                setState(() => _selectedScreenId = screen.id),
+                          ),
+                        ),
+                    if (controller.clients.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      const Divider(height: 1, color: Color(0xFFF3F4F6)),
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(8, 12, 8, 4),
+                        child: Text(
+                          'CLIENTS',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF9CA3AF),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                        child: TextField(
+                          onChanged: (v) =>
+                              setState(() => _playerClientSearch = v),
+                          decoration: InputDecoration(
+                            hintText: 'Search clients...',
+                            prefixIcon:
+                                const Icon(Icons.search_rounded, size: 16),
+                            isDense: true,
+                            contentPadding:
+                                const EdgeInsets.symmetric(vertical: 7),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide:
+                                  const BorderSide(color: Color(0xFFE5E7EB)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide:
+                                  const BorderSide(color: Color(0xFFE5E7EB)),
+                            ),
+                            filled: true,
+                            fillColor: const Color(0xFFF9FAFB),
+                          ),
+                        ),
+                      ),
+                      for (final client in controller.clients
+                          .where((c) => c.name
+                              .toLowerCase()
+                              .contains(_playerClientSearch.toLowerCase()))
+                          .toList()) ...[
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: _SelectableTile(
+                            title: client.name,
+                            subtitle:
+                                '${controller.mediaForClient(client.id).length} media',
+                            selected: client.id == _selectedPlayerClientId,
+                            onTap: () => setState(() {
+                              _selectedPlayerClientId =
+                                  _selectedPlayerClientId == client.id
+                                      ? null
+                                      : client.id;
+                            }),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+        final leftPanelWidget = stackLayout
+            ? SizedBox(height: 420, child: leftPanel)
+            : SizedBox(width: 260, child: leftPanel);
+
+        final rightPanel = selectedScreen == null
+            ? const _EmptyStateCard(
+                title: 'Select a screen',
+                subtitle:
+                    'Choose a screen to assign client media and reorder its playlist.',
+              )
+            : LayoutBuilder(
+                builder: (context, innerConstraints) {
+                  final stack = innerConstraints.maxWidth < 700;
+                  final left =
+                      _buildAvailableMediaPanel(controller, selectedScreen);
+                  final right = _buildPlaylistPanel(controller, selectedScreen);
+                  if (stack) {
+                    return Column(
+                      children: [
+                        left,
+                        const SizedBox(height: 16),
+                        right,
+                      ],
+                    );
+                  }
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: left),
+                      const SizedBox(width: 16),
+                      Expanded(child: right),
+                    ],
+                  );
+                },
+              );
+
+        if (stackLayout) {
+          return SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: TextField(
-                    onChanged: (v) => setState(() => _playerSearch = v),
-                    decoration: InputDecoration(
-                      hintText: 'Search screens...',
-                      prefixIcon: const Icon(Icons.search_rounded, size: 18),
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                      ),
-                      filled: true,
-                      fillColor: const Color(0xFFF9FAFB),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                    children: [
-                      if (controller.screens.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.all(8),
-                          child: _EmptyStateCard(
-                            title: 'No screens',
-                            subtitle: 'Add a screen first.',
-                            compact: true,
-                          ),
-                        )
-                      else
-                        for (final screen in filteredScreens)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: _SelectableTile(
-                              title: screen.name,
-                              subtitle:
-                                  '${screen.assignedMediaIds.length} items',
-                              selected: screen.id == _selectedScreenId,
-                              onTap: () =>
-                                  setState(() => _selectedScreenId = screen.id),
-                            ),
-                          ),
-                      if (controller.clients.isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        const Divider(height: 1, color: Color(0xFFF3F4F6)),
-                        const Padding(
-                          padding: EdgeInsets.fromLTRB(8, 12, 8, 4),
-                          child: Text(
-                            'CLIENTS',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF9CA3AF),
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                          child: TextField(
-                            onChanged: (v) => setState(() => _playerClientSearch = v),
-                            decoration: InputDecoration(
-                              hintText: 'Search clients...',
-                              prefixIcon: const Icon(Icons.search_rounded, size: 16),
-                              isDense: true,
-                              contentPadding: const EdgeInsets.symmetric(vertical: 7),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                              ),
-                              filled: true,
-                              fillColor: const Color(0xFFF9FAFB),
-                            ),
-                          ),
-                        ),
-                        for (final client in controller.clients.where((c) => c.name.toLowerCase().contains(_playerClientSearch.toLowerCase())).toList()) ...[
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: _SelectableTile(
-                              title: client.name,
-                              subtitle:
-                                  '${controller.mediaForClient(client.id).length} media',
-                              selected: client.id == _selectedPlayerClientId,
-                              onTap: () => setState(() {
-                                _selectedPlayerClientId =
-                                    _selectedPlayerClientId == client.id
-                                        ? null
-                                        : client.id;
-                              }),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ],
-                  ),
-                ),
+                leftPanelWidget,
+                const SizedBox(height: 16),
+                rightPanel,
               ],
             ),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: selectedScreen == null
-              ? const _EmptyStateCard(
-                  title: 'Select a screen',
-                  subtitle:
-                      'Choose a screen to assign client media and reorder its playlist.',
-                )
-              : LayoutBuilder(
-                  builder: (context, constraints) {
-                    final stack = constraints.maxWidth < 700;
-                    final left =
-                        _buildAvailableMediaPanel(controller, selectedScreen);
-                    final right =
-                        _buildPlaylistPanel(controller, selectedScreen);
-                    if (stack) {
-                      return SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            left,
-                            const SizedBox(height: 16),
-                            right,
-                          ],
-                        ),
-                      );
-                    }
-                    return Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(child: SingleChildScrollView(child: left)),
-                        const SizedBox(width: 16),
-                        Expanded(child: SingleChildScrollView(child: right)),
-                      ],
-                    );
-                  },
-                ),
-        ),
-      ],
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            leftPanelWidget,
+            const SizedBox(width: 16),
+            Expanded(child: rightPanel),
+          ],
+        );
+      },
     );
   }
 
@@ -1485,7 +1452,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     selected: _reportFilterClientId == null,
                     onTap: () => setState(() {
                       _reportFilterClientId = null;
-                      _reportFilterScreenId = null;
                     }),
                   ),
                   _ViewToggleButton(
@@ -1493,7 +1459,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     icon: Icons.groups_rounded,
                     selected: _reportFilterClientId != null,
                     onTap: () => setState(() {
-                      _reportFilterScreenId = null;
                       _reportFilterClientId = controller.clients.isNotEmpty
                           ? controller.clients.first.id
                           : null;
@@ -1620,7 +1585,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                         final search = _reportClientSearch.trim().toLowerCase();
                         final filteredClients = controller.clients
                             .where(
-                              (client) => search.isEmpty ||
+                              (client) =>
+                                  search.isEmpty ||
                                   client.name.toLowerCase().contains(search),
                             )
                             .toList();
@@ -1806,7 +1772,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           : null;
       _selectedPlayerClientId = null;
       _reportFilterClientId = null;
-      _reportFilterScreenId = null;
       _reportClientSearch = '';
       _expandedReportCardId = null;
     });
@@ -2391,7 +2356,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   ) async {
     final result = await showDialog<_DownloadReportResult>(
       context: context,
-      builder: (_) => _ReportGroupDialog(initialStart: startDate, initialEnd: endDate),
+      builder: (_) =>
+          _ReportGroupDialog(initialStart: startDate, initialEnd: endDate),
     );
     if (result == null) return;
 
@@ -3121,8 +3087,9 @@ class _ClientReportCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               IconButton(
-                onPressed: () => _AdminDashboardPageState._downloadClientReportDirect(
-                    context, controller, client, videoThumbnails, from, to),
+                onPressed: () =>
+                    _AdminDashboardPageState._downloadClientReportDirect(
+                        context, controller, client, videoThumbnails, from, to),
                 icon: const Icon(Icons.download_outlined, size: 20),
                 color: const Color(0xFF111827),
                 tooltip: 'Download Report',
@@ -3892,9 +3859,9 @@ class _StatBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -4284,7 +4251,7 @@ class _StatCard extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: accent.withOpacity(0.12),
+                color: accent.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: accent, size: 22),
@@ -5092,273 +5059,354 @@ class _ClientExpandableCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final mediaItems = controller.mediaForClient(client.id);
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isExpanded ? const Color(0xFF111827) : const Color(0xFFE5E7EB),
-        ),
-        boxShadow: const [
-          BoxShadow(
-              color: Color(0x08000000), blurRadius: 4, offset: Offset(0, 1)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header row — always visible
-          InkWell(
-            onTap: onTap,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
-              child: Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF3F4F6),
-                      borderRadius: BorderRadius.circular(8),
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 560;
+
+        Widget buildHeaderButtons() {
+          return Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              OutlinedButton.icon(
+                onPressed: onEdit,
+                icon: const Icon(Icons.edit_outlined, size: 13),
+                label: const Text('Edit'),
+                style: OutlinedButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+              OutlinedButton.icon(
+                onPressed: onDelete,
+                icon: const Icon(Icons.delete_outline_rounded, size: 13),
+                label: const Text('Delete'),
+                style: OutlinedButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                  foregroundColor: const Color(0xFFEF4444),
+                ),
+              ),
+            ],
+          );
+        }
+
+        Widget buildHeader() {
+          final titleBlock = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                client.name,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF111827),
+                ),
+              ),
+              Text(
+                '${mediaItems.length} media asset${mediaItems.length == 1 ? '' : 's'}',
+                style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+              ),
+            ],
+          );
+
+          final leading = Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF3F4F6),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(
+              Icons.groups_outlined,
+              size: 18,
+              color: Color(0xFF6B7280),
+            ),
+          );
+
+          if (compact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    leading,
+                    const SizedBox(width: 12),
+                    Expanded(child: titleBlock),
+                    Icon(
+                      isExpanded
+                          ? Icons.keyboard_arrow_up_rounded
+                          : Icons.keyboard_arrow_down_rounded,
+                      color: const Color(0xFF9CA3AF),
                     ),
-                    child: const Icon(Icons.groups_outlined,
-                        size: 18, color: Color(0xFF6B7280)),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
+                  ],
+                ),
+                const SizedBox(height: 12),
+                buildHeaderButtons(),
+              ],
+            );
+          }
+
+          return Row(
+            children: [
+              leading,
+              const SizedBox(width: 12),
+              Expanded(child: titleBlock),
+              if (!isExpanded) ...[
+                buildHeaderButtons(),
+                const SizedBox(width: 8),
+              ],
+              Icon(
+                isExpanded
+                    ? Icons.keyboard_arrow_up_rounded
+                    : Icons.keyboard_arrow_down_rounded,
+                color: const Color(0xFF9CA3AF),
+              ),
+            ],
+          );
+        }
+
+        Widget buildMediaGrid(BoxConstraints innerConstraints) {
+          final itemWidth = innerConstraints.maxWidth < 360
+              ? innerConstraints.maxWidth
+              : 320.0;
+
+          return Wrap(
+            spacing: 16,
+            runSpacing: 16,
+            children: [
+              for (final item in mediaItems)
+                SizedBox(
+                  width: itemWidth,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF9FAFB),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFE5E7EB)),
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          client.name,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF111827),
+                        ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(10),
+                          ),
+                          child: item.url.isNotEmpty
+                              ? (item.kind == MediaKind.image
+                                  ? Image.network(
+                                      item.url,
+                                      height: 180,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) =>
+                                          _MediaPlaceholder(kind: item.kind),
+                                    )
+                                  : _VideoPreviewTile(
+                                      url: item.url,
+                                      mediaId: item.id,
+                                      controller: controller,
+                                      onThumbnailCaptured: onThumbnailCaptured,
+                                    ))
+                              : _MediaPlaceholder(kind: item.kind),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  item.title,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 14,
+                                    color: Color(0xFF111827),
+                                  ),
+                                ),
+                              ),
+                              if (item.kind == MediaKind.image)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF3F4F6),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    '${item.durationSeconds}s',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12,
+                                      color: Color(0xFF6B7280),
+                                    ),
+                                  ),
+                                ),
+                              IconButton(
+                                onPressed: () => onDeleteMedia(item),
+                                icon: const Icon(
+                                  Icons.delete_outline_rounded,
+                                  size: 18,
+                                ),
+                                color: const Color(0xFFEF4444),
+                                visualDensity: VisualDensity.compact,
+                              ),
+                              IconButton(
+                                onPressed: () => onAssignToScreens(item),
+                                icon: const Icon(Icons.tv_outlined, size: 18),
+                                color: const Color(0xFF111827),
+                                tooltip: 'Add to screens',
+                                visualDensity: VisualDensity.compact,
+                              ),
+                            ],
                           ),
                         ),
-                        Text(
-                          '${mediaItems.length} media asset${mediaItems.length == 1 ? '' : 's'}',
-                          style: const TextStyle(
-                              fontSize: 12, color: Color(0xFF6B7280)),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (!isExpanded) ...[
-                    Wrap(
-                      spacing: 6,
-                      children: [
-                        OutlinedButton.icon(
-                          onPressed: onEdit,
-                          icon: const Icon(Icons.edit_outlined, size: 13),
-                          label: const Text('Edit'),
-                          style: OutlinedButton.styleFrom(
-                              visualDensity: VisualDensity.compact),
-                        ),
-                        OutlinedButton.icon(
-                          onPressed: onDelete,
-                          icon: const Icon(Icons.delete_outline_rounded,
-                              size: 13),
-                          label: const Text('Delete'),
-                          style: OutlinedButton.styleFrom(
-                            visualDensity: VisualDensity.compact,
-                            foregroundColor: const Color(0xFFEF4444),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(width: 8),
-                  ],
-                  Icon(
-                    isExpanded
-                        ? Icons.keyboard_arrow_up_rounded
-                        : Icons.keyboard_arrow_down_rounded,
-                    color: const Color(0xFF9CA3AF),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          // Expanded content
-          if (isExpanded) ...[
-            const Divider(height: 1, color: Color(0xFFE5E7EB)),
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Contact chips + action buttons
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Wrap(
-                          spacing: 10,
-                          runSpacing: 8,
-                          children: [
-                            if (client.contactName.isNotEmpty)
-                              _ChipSummary(
-                                  label: 'Contact', value: client.contactName),
-                            if (client.contactEmail.isNotEmpty)
-                              _ChipSummary(
-                                  label: 'Email', value: client.contactEmail),
-                            if (client.phone.isNotEmpty)
-                              _ChipSummary(label: 'Phone', value: client.phone),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Wrap(
-                        spacing: 8,
-                        children: [
-                          OutlinedButton.icon(
-                            onPressed: onEdit,
-                            icon: const Icon(Icons.edit_outlined, size: 14),
-                            label: const Text('Edit'),
-                          ),
-                          OutlinedButton.icon(
-                            onPressed: onDelete,
-                            icon: const Icon(Icons.delete_outline_rounded,
-                                size: 14),
-                            label: const Text('Delete'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFFEF4444),
+                        if (item.description.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                            child: Text(
+                              item.description,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF6B7280),
+                              ),
                             ),
                           ),
-                          FilledButton.icon(
-                            onPressed: onUpload,
-                            icon: const Icon(Icons.upload_rounded, size: 14),
-                            label: const Text('Upload Media'),
-                          ),
-                        ],
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          );
+        }
+
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isExpanded
+                  ? const Color(0xFF111827)
+                  : const Color(0xFFE5E7EB),
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x08000000),
+                blurRadius: 4,
+                offset: Offset(0, 1),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              InkWell(
+                onTap: onTap,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(12)),
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(20, 16, compact ? 20 : 12, 16),
+                  child: buildHeader(),
+                ),
+              ),
+              if (isExpanded) ...[
+                const Divider(height: 1, color: Color(0xFFE5E7EB)),
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      LayoutBuilder(
+                        builder: (context, innerConstraints) {
+                          final stackActions = innerConstraints.maxWidth < 620;
+                          final chips = Wrap(
+                            spacing: 10,
+                            runSpacing: 8,
+                            children: [
+                              if (client.contactName.isNotEmpty)
+                                _ChipSummary(
+                                  label: 'Contact',
+                                  value: client.contactName,
+                                ),
+                              if (client.contactEmail.isNotEmpty)
+                                _ChipSummary(
+                                  label: 'Email',
+                                  value: client.contactEmail,
+                                ),
+                              if (client.phone.isNotEmpty)
+                                _ChipSummary(
+                                  label: 'Phone',
+                                  value: client.phone,
+                                ),
+                            ],
+                          );
+                          final actions = Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              OutlinedButton.icon(
+                                onPressed: onEdit,
+                                icon: const Icon(Icons.edit_outlined, size: 14),
+                                label: const Text('Edit'),
+                              ),
+                              OutlinedButton.icon(
+                                onPressed: onDelete,
+                                icon: const Icon(Icons.delete_outline_rounded,
+                                    size: 14),
+                                label: const Text('Delete'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: const Color(0xFFEF4444),
+                                ),
+                              ),
+                              FilledButton.icon(
+                                onPressed: onUpload,
+                                icon:
+                                    const Icon(Icons.upload_rounded, size: 14),
+                                label: const Text('Upload Media'),
+                              ),
+                            ],
+                          );
+
+                          if (stackActions) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                chips,
+                                const SizedBox(height: 12),
+                                actions,
+                              ],
+                            );
+                          }
+
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(child: chips),
+                              const SizedBox(width: 12),
+                              actions,
+                            ],
+                          );
+                        },
                       ),
+                      const SizedBox(height: 20),
+                      if (mediaItems.isEmpty)
+                        const _EmptyStateCard(
+                          title: 'No media uploaded',
+                          subtitle: 'Upload photos or videos for this client.',
+                          compact: true,
+                        )
+                      else
+                        LayoutBuilder(
+                          builder: (context, innerConstraints) =>
+                              buildMediaGrid(innerConstraints),
+                        ),
                     ],
                   ),
-                  const SizedBox(height: 20),
-                  // Media grid
-                  if (mediaItems.isEmpty)
-                    const _EmptyStateCard(
-                      title: 'No media uploaded',
-                      subtitle: 'Upload photos or videos for this client.',
-                      compact: true,
-                    )
-                  else
-                    Wrap(
-                      spacing: 16,
-                      runSpacing: 16,
-                      children: [
-                        for (final item in mediaItems)
-                          SizedBox(
-                            width: 320,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF9FAFB),
-                                borderRadius: BorderRadius.circular(10),
-                                border:
-                                    Border.all(color: const Color(0xFFE5E7EB)),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  ClipRRect(
-                                    borderRadius: const BorderRadius.vertical(
-                                        top: Radius.circular(10)),
-                                    child: item.url.isNotEmpty
-                                        ? (item.kind == MediaKind.image
-                                            ? Image.network(
-                                                item.url,
-                                                height: 180,
-                                                width: double.infinity,
-                                                fit: BoxFit.cover,
-                                                errorBuilder: (_, __, ___) =>
-                                                    _MediaPlaceholder(
-                                                        kind: item.kind),
-                                              )
-                                            : _VideoPreviewTile(
-                                                url: item.url,
-                                                mediaId: item.id,
-                                                controller: controller,
-                                                onThumbnailCaptured:
-                                                    onThumbnailCaptured))
-                                        : _MediaPlaceholder(kind: item.kind),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                        12, 10, 4, 10),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            item.title,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w700,
-                                              fontSize: 14,
-                                              color: Color(0xFF111827),
-                                            ),
-                                          ),
-                                        ),
-                                        if (item.kind == MediaKind.image)
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 8, vertical: 4),
-                                            decoration: BoxDecoration(
-                                              color: const Color(0xFFF3F4F6),
-                                              borderRadius:
-                                                  BorderRadius.circular(6),
-                                            ),
-                                            child: Text(
-                                              '${item.durationSeconds}s',
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 12,
-                                                color: Color(0xFF6B7280),
-                                              ),
-                                            ),
-                                          ),
-                                        IconButton(
-                                          onPressed: () => onDeleteMedia(item),
-                                          icon: const Icon(
-                                              Icons.delete_outline_rounded,
-                                              size: 18),
-                                          color: const Color(0xFFEF4444),
-                                          visualDensity: VisualDensity.compact,
-                                        ),
-                                        IconButton(
-                                          onPressed: () =>
-                                              onAssignToScreens(item),
-                                          icon: const Icon(Icons.tv_outlined,
-                                              size: 18),
-                                          color: const Color(0xFF111827),
-                                          tooltip: 'Add to screens',
-                                          visualDensity: VisualDensity.compact,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  if (item.description.isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                          12, 0, 12, 12),
-                                      child: Text(
-                                        item.description,
-                                        style: const TextStyle(
-                                            fontSize: 12,
-                                            color: Color(0xFF6B7280)),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -5502,7 +5550,10 @@ class _ReportGroupDialogState extends State<_ReportGroupDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('Date Range',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF6B7280))),
+                style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF6B7280))),
             const SizedBox(height: 10),
             Row(
               children: [
@@ -5541,7 +5592,10 @@ class _ReportGroupDialogState extends State<_ReportGroupDialog> {
             ),
             const SizedBox(height: 20),
             const Text('Breakdown Type',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF6B7280))),
+                style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF6B7280))),
             const SizedBox(height: 10),
             Row(
               children: [
@@ -5561,7 +5615,8 @@ class _ReportGroupDialogState extends State<_ReportGroupDialog> {
                     subtitle: 'Month-wise breakdown per video',
                     icon: Icons.calendar_month_outlined,
                     selected: _groupBy == ReportGroupBy.monthly,
-                    onTap: () => setState(() => _groupBy = ReportGroupBy.monthly),
+                    onTap: () =>
+                        setState(() => _groupBy = ReportGroupBy.monthly),
                   ),
                 ),
               ],
@@ -5576,7 +5631,8 @@ class _ReportGroupDialogState extends State<_ReportGroupDialog> {
         ),
         FilledButton.icon(
           onPressed: () => Navigator.of(context).pop(
-            _DownloadReportResult(groupBy: _groupBy, startDate: _start, endDate: _end),
+            _DownloadReportResult(
+                groupBy: _groupBy, startDate: _start, endDate: _end),
           ),
           icon: const Icon(Icons.download_outlined, size: 16),
           label: const Text('Download PDF'),
@@ -5618,7 +5674,9 @@ class _BreakdownOption extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, size: 20, color: selected ? Colors.white : const Color(0xFF6B7280)),
+            Icon(icon,
+                size: 20,
+                color: selected ? Colors.white : const Color(0xFF6B7280)),
             const SizedBox(height: 8),
             Text(label,
                 style: TextStyle(
@@ -5630,7 +5688,9 @@ class _BreakdownOption extends StatelessWidget {
             Text(subtitle,
                 style: TextStyle(
                   fontSize: 11,
-                  color: selected ? const Color(0xFFD1D5DB) : const Color(0xFF9CA3AF),
+                  color: selected
+                      ? const Color(0xFFD1D5DB)
+                      : const Color(0xFF9CA3AF),
                 )),
           ],
         ),
