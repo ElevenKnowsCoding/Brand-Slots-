@@ -38,7 +38,6 @@ class _ScreenPlayerPageState extends State<ScreenPlayerPage> {
   String _playlistSignature = '';
   DateTime _currentDay = DateTime.now();
   _PlayerOrientation _playerOrientation = _PlayerOrientation.landscape;
-  bool _playerOrientationApplied = false;
 
   // Stats overlay
   _StatPeriod _statPeriod = _StatPeriod.daily;
@@ -52,6 +51,9 @@ class _ScreenPlayerPageState extends State<ScreenPlayerPage> {
     _mediaCache = createScreenMediaCache();
     widget.controller.addListener(_handleControllerUpdate);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    _playerOrientation =
+        _orientationFromValue(widget.controller.organization.screenPlayerOrientation);
+    unawaited(_applyPlayerOrientation(_playerOrientation));
     _playlistSignature = _buildPlaylistSignature(_media);
     WidgetsBinding.instance.addPostFrameCallback((_) => _prepareCurrentMedia());
     _sendHeartbeat();
@@ -63,23 +65,13 @@ class _ScreenPlayerPageState extends State<ScreenPlayerPage> {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_playerOrientationApplied) return;
-    _playerOrientationApplied = true;
-    _playerOrientation = MediaQuery.orientationOf(context) == Orientation.landscape
-        ? _PlayerOrientation.landscape
-        : _PlayerOrientation.portrait;
-    unawaited(_applyPlayerOrientation(_playerOrientation));
-  }
-
-  @override
   void didUpdateWidget(covariant ScreenPlayerPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.controller != widget.controller) {
       oldWidget.controller.removeListener(_handleControllerUpdate);
       widget.controller.addListener(_handleControllerUpdate);
       _playlistSignature = _buildPlaylistSignature(_media);
+      _syncPlayerOrientation();
     }
   }
 
@@ -119,6 +111,20 @@ class _ScreenPlayerPageState extends State<ScreenPlayerPage> {
     await _applyPlayerOrientation(orientation);
   }
 
+  _PlayerOrientation _orientationFromValue(String value) {
+    return value.toLowerCase() == 'portrait'
+        ? _PlayerOrientation.portrait
+        : _PlayerOrientation.landscape;
+  }
+
+  void _syncPlayerOrientation() {
+    final desired =
+        _orientationFromValue(widget.controller.organization.screenPlayerOrientation);
+    if (_playerOrientation == desired) return;
+    setState(() => _playerOrientation = desired);
+    unawaited(_applyPlayerOrientation(desired));
+  }
+
   List<MediaItem> get _media {
     final screen = widget.controller.activeScreen;
     if (screen == null) return const [];
@@ -126,6 +132,7 @@ class _ScreenPlayerPageState extends State<ScreenPlayerPage> {
   }
 
   void _handleControllerUpdate() {
+    _syncPlayerOrientation();
     final media = _media;
     final nextSignature = _buildPlaylistSignature(media);
     if (nextSignature == _playlistSignature) return;
@@ -485,26 +492,6 @@ class _ScreenPlayerPageState extends State<ScreenPlayerPage> {
                             )
                           : _buildFallback(current),
             ),
-            Positioned(
-              top: 16,
-              left: 16,
-              right: 16,
-              child: SafeArea(
-                bottom: false,
-                child: Row(
-                  children: [
-                    _OrientationControl(
-                      orientation: _playerOrientation,
-                      onPortrait: () =>
-                          _setPlayerOrientation(_PlayerOrientation.portrait),
-                      onLandscape: () =>
-                          _setPlayerOrientation(_PlayerOrientation.landscape),
-                    ),
-                    const Spacer(),
-                  ],
-                ),
-              ),
-            ),
           ],
         ),
       ),
@@ -703,91 +690,6 @@ class _StatPeriodSheetState extends State<_StatPeriodSheet> {
             ],
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _OrientationControl extends StatelessWidget {
-  const _OrientationControl({
-    required this.orientation,
-    required this.onPortrait,
-    required this.onLandscape,
-  });
-
-  final _PlayerOrientation orientation;
-  final VoidCallback onPortrait;
-  final VoidCallback onLandscape;
-
-  @override
-  Widget build(BuildContext context) {
-    Widget chip({
-      required String label,
-      required IconData icon,
-      required bool selected,
-      required VoidCallback onTap,
-    }) {
-      return Material(
-        color: selected ? Colors.white : const Color(0x1AFFFFFF),
-        borderRadius: BorderRadius.circular(999),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(999),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(
-                color: selected ? Colors.white : const Color(0x33FFFFFF),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  icon,
-                  size: 14,
-                  color: selected ? Colors.black : Colors.white,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: selected ? Colors.black : Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(6),
-      decoration: BoxDecoration(
-        color: const Color(0x66000000),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          chip(
-            label: 'Portrait',
-            icon: Icons.stay_current_portrait_rounded,
-            selected: orientation == _PlayerOrientation.portrait,
-            onTap: onPortrait,
-          ),
-          const SizedBox(width: 6),
-          chip(
-            label: 'Landscape',
-            icon: Icons.stay_current_landscape_rounded,
-            selected: orientation == _PlayerOrientation.landscape,
-            onTap: onLandscape,
-          ),
-        ],
       ),
     );
   }

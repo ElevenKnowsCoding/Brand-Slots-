@@ -190,6 +190,7 @@ class SupabaseAppRepository implements AppRepository {
       'accent_color_hex': profile.accentColorHex,
       'apk_base_url': profile.apkBaseUrl,
       'local_project_path': profile.localProjectPath,
+      'screen_player_orientation': profile.screenPlayerOrientation,
     });
   }
 
@@ -708,6 +709,8 @@ class SupabaseAppRepository implements AppRepository {
         accentColorHex: r['accent_color_hex'] as String? ?? '#0F766E',
         apkBaseUrl: r['apk_base_url'] as String? ?? '',
         localProjectPath: r['local_project_path'] as String? ?? '',
+        screenPlayerOrientation:
+            r['screen_player_orientation'] as String? ?? 'landscape',
       );
 
   ClientProfile _clientFromRow(Map<String, dynamic> r) => ClientProfile(

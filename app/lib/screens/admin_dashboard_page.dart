@@ -1683,50 +1683,81 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     final apkBaseController = TextEditingController(text: profile.apkBaseUrl);
     final localPathController =
         TextEditingController(text: profile.localProjectPath);
+    var selectedOrientation = profile.screenPlayerOrientation.isEmpty
+        ? 'landscape'
+        : profile.screenPlayerOrientation;
 
     final saved = await showDialog<bool>(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Admin Profile'),
-          content: SizedBox(
-            width: _dialogContentWidth(context, 520),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _DialogField(
-                      label: 'Company name', controller: companyController),
-                  _DialogField(
-                      label: 'Admin name', controller: adminController),
-                  _DialogField(
-                      label: 'Admin email', controller: emailController),
-                  _DialogField(label: 'Phone', controller: phoneController),
-                  _DialogField(
-                    label: 'Welcome message',
-                    controller: welcomeController,
-                    maxLines: 3,
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Admin Profile'),
+              content: SizedBox(
+                width: _dialogContentWidth(context, 520),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _DialogField(
+                          label: 'Company name', controller: companyController),
+                      _DialogField(
+                          label: 'Admin name', controller: adminController),
+                      _DialogField(
+                          label: 'Admin email', controller: emailController),
+                      _DialogField(label: 'Phone', controller: phoneController),
+                      _DialogField(
+                        label: 'Welcome message',
+                        controller: welcomeController,
+                        maxLines: 3,
+                      ),
+                      _DialogField(
+                          label: 'APK base URL', controller: apkBaseController),
+                      _DialogField(
+                        label: 'Local project path',
+                        controller: localPathController,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: DropdownButtonFormField<String>(
+                          initialValue: selectedOrientation,
+                          decoration: const InputDecoration(
+                            labelText: 'Screen player orientation',
+                            border: OutlineInputBorder(),
+                          ),
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'landscape',
+                              child: Text('Landscape'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'portrait',
+                              child: Text('Portrait'),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            if (value == null) return;
+                            setDialogState(() => selectedOrientation = value);
+                          },
+                        ),
+                      ),
+                    ],
                   ),
-                  _DialogField(
-                      label: 'APK base URL', controller: apkBaseController),
-                  _DialogField(
-                    label: 'Local project path',
-                    controller: localPathController,
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Save'),
-            ),
-          ],
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -1749,6 +1780,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         welcomeMessage: welcomeController.text.trim(),
         apkBaseUrl: apkBaseController.text.trim(),
         localProjectPath: localPathController.text.trim(),
+        screenPlayerOrientation: selectedOrientation,
       ),
     );
     _showMessage('Admin profile updated.');

@@ -46,6 +46,7 @@ class LocalAppRepository implements AppRepository {
       companyName: companyName,
       adminName: name,
       adminEmail: email,
+      screenPlayerOrientation: 'landscape',
     );
     _data = _data.copyWith(admin: admin, organization: organization);
     await _persist();

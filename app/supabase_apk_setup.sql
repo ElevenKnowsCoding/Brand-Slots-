@@ -11,7 +11,8 @@ create table if not exists public.app_config (
   logo_url text not null default '',
   accent_color_hex text not null default '#0F766E',
   apk_base_url text not null default '',
-  local_project_path text not null default ''
+  local_project_path text not null default '',
+  screen_player_orientation text not null default 'landscape'
 );
 
 create table if not exists public.clients (
@@ -63,6 +64,9 @@ add column if not exists apk_base_url text not null default '';
 
 alter table if exists public.app_config
 add column if not exists local_project_path text not null default '';
+
+alter table if exists public.app_config
+add column if not exists screen_player_orientation text not null default 'landscape';
 
 alter table if exists public.screens
 add column if not exists play_count integer not null default 0;
@@ -147,6 +151,10 @@ set
   admin_password = case
     when public.app_config.admin_password = '' then excluded.admin_password
     else public.app_config.admin_password
+  end,
+  screen_player_orientation = case
+    when public.app_config.screen_player_orientation = '' then excluded.screen_player_orientation
+    else public.app_config.screen_player_orientation
   end;
 
 alter table public.app_config replica identity full;

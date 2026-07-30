@@ -45,6 +45,7 @@ class OrganizationProfile {
     required this.accentColorHex,
     required this.apkBaseUrl,
     required this.localProjectPath,
+    required this.screenPlayerOrientation,
   });
 
   final String companyName;
@@ -56,6 +57,7 @@ class OrganizationProfile {
   final String accentColorHex;
   final String apkBaseUrl;
   final String localProjectPath;
+  final String screenPlayerOrientation;
 
   factory OrganizationProfile.empty() {
     return const OrganizationProfile(
@@ -68,6 +70,7 @@ class OrganizationProfile {
       accentColorHex: '#0F766E',
       apkBaseUrl: '',
       localProjectPath: '',
+      screenPlayerOrientation: 'landscape',
     );
   }
 
@@ -81,6 +84,7 @@ class OrganizationProfile {
     String? accentColorHex,
     String? apkBaseUrl,
     String? localProjectPath,
+    String? screenPlayerOrientation,
   }) {
     return OrganizationProfile(
       companyName: companyName ?? this.companyName,
@@ -92,6 +96,8 @@ class OrganizationProfile {
       accentColorHex: accentColorHex ?? this.accentColorHex,
       apkBaseUrl: apkBaseUrl ?? this.apkBaseUrl,
       localProjectPath: localProjectPath ?? this.localProjectPath,
+      screenPlayerOrientation:
+          screenPlayerOrientation ?? this.screenPlayerOrientation,
     );
   }
 
@@ -106,6 +112,7 @@ class OrganizationProfile {
       'accentColorHex': accentColorHex,
       'apkBaseUrl': apkBaseUrl,
       'localProjectPath': localProjectPath,
+      'screenPlayerOrientation': screenPlayerOrientation,
     };
   }
 
@@ -121,6 +128,8 @@ class OrganizationProfile {
       accentColorHex: json['accentColorHex'] as String? ?? '#0F766E',
       apkBaseUrl: json['apkBaseUrl'] as String? ?? '',
       localProjectPath: json['localProjectPath'] as String? ?? '',
+      screenPlayerOrientation:
+          json['screenPlayerOrientation'] as String? ?? 'landscape',
     );
   }
 }
