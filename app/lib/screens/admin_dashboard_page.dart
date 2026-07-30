@@ -1282,24 +1282,24 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 ),
               ),
               FilledButton.tonal(
-                onPressed: isPortrait
-                    ? null
-                    : () => _setScreenOrientation(screen, 'portrait'),
+                onPressed: () => _setScreenOrientation(screen, 'portrait'),
                 style: FilledButton.styleFrom(
-                  backgroundColor:
-                      isPortrait ? const Color(0xFFE3F1F1) : null,
-                  foregroundColor: const Color(0xFF10233D),
+                  backgroundColor: isPortrait
+                      ? const Color(0xFF10233D)
+                      : const Color(0xFFE3F1F1),
+                  foregroundColor:
+                      isPortrait ? Colors.white : const Color(0xFF10233D),
                 ),
                 child: const Text('Portrait'),
               ),
               FilledButton.tonal(
-                onPressed: isPortrait
-                    ? () => _setScreenOrientation(screen, 'landscape')
-                    : null,
+                onPressed: () => _setScreenOrientation(screen, 'landscape'),
                 style: FilledButton.styleFrom(
-                  backgroundColor:
-                      isPortrait ? null : const Color(0xFFE3F1F1),
-                  foregroundColor: const Color(0xFF10233D),
+                  backgroundColor: isPortrait
+                      ? const Color(0xFFE3F1F1)
+                      : const Color(0xFF10233D),
+                  foregroundColor:
+                      isPortrait ? const Color(0xFF10233D) : Colors.white,
                 ),
                 child: const Text('Landscape'),
               ),
