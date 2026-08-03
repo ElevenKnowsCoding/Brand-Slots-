@@ -194,8 +194,7 @@ class ReportPdfService {
 
             final sortedPeriods = periodPlays.keys.toList()..sort();
 
-            // Wrap all parts of this media item into one Column so MultiPage
-            // flows them together without leaving blank space before the table.
+            // Header + screen lines as one block (small, won't cause blank space)
             widgets.add(pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
@@ -235,36 +234,38 @@ class ReportPdfService {
                           .toList(),
                     ),
                   ),
-                if (sortedPeriods.isNotEmpty)
-                  pw.Padding(
-                    padding: const pw.EdgeInsets.fromLTRB(14, 10, 14, 0),
-                    child: pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.start,
-                      children: [
-                        pw.Text(
-                          groupBy == ReportGroupBy.daily ? 'Daily Breakdown' : 'Monthly Breakdown',
-                          style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold, color: _textMid),
-                        ),
-                        pw.SizedBox(height: 6),
-                        pw.Table.fromTextArray(
-                          headers: [groupBy == ReportGroupBy.daily ? 'DATE' : 'MONTH', 'PLAYS'],
-                          data: sortedPeriods
-                              .map((k) => [_formatPeriodKey(k, groupBy), '${periodPlays[k]}'])
-                              .toList(),
-                          headerStyle: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold, color: _white),
-                          headerDecoration: const pw.BoxDecoration(color: _blue),
-                          cellStyle: const pw.TextStyle(fontSize: 9, color: _textDark),
-                          oddRowDecoration: const pw.BoxDecoration(color: _rowAlt),
-                          border: pw.TableBorder.all(color: _borderGrey, width: 0.4),
-                          cellAlignments: {0: pw.Alignment.centerLeft, 1: pw.Alignment.center},
-                          cellPadding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                        ),
-                      ],
-                    ),
-                  ),
-                pw.SizedBox(height: 14),
               ],
             ));
+
+            // Breakdown table added separately so MultiPage can paginate it
+            if (sortedPeriods.isNotEmpty) {
+              widgets.add(pw.Padding(
+                padding: const pw.EdgeInsets.fromLTRB(14, 10, 14, 0),
+                child: pw.Text(
+                  groupBy == ReportGroupBy.daily ? 'Daily Breakdown' : 'Monthly Breakdown',
+                  style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold, color: _textMid),
+                ),
+              ));
+              widgets.add(pw.SizedBox(height: 6));
+              widgets.add(pw.Padding(
+                padding: const pw.EdgeInsets.fromLTRB(14, 0, 14, 0),
+                child: pw.Table.fromTextArray(
+                  headers: [groupBy == ReportGroupBy.daily ? 'DATE' : 'MONTH', 'PLAYS'],
+                  data: sortedPeriods
+                      .map((k) => [_formatPeriodKey(k, groupBy), '${periodPlays[k]}'])
+                      .toList(),
+                  headerStyle: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold, color: _white),
+                  headerDecoration: const pw.BoxDecoration(color: _blue),
+                  cellStyle: const pw.TextStyle(fontSize: 9, color: _textDark),
+                  oddRowDecoration: const pw.BoxDecoration(color: _rowAlt),
+                  border: pw.TableBorder.all(color: _borderGrey, width: 0.4),
+                  cellAlignments: {0: pw.Alignment.centerLeft, 1: pw.Alignment.center},
+                  cellPadding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                ),
+              ));
+            }
+
+            widgets.add(pw.SizedBox(height: 14));
           }
 
           widgets.add(pw.Container(
