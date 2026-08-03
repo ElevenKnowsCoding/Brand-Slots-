@@ -59,14 +59,12 @@ class ReportPdfService {
   }) async {
     final pdf = pw.Document();
 
-    // Load logo — skip if it fails
     pw.ImageProvider? logoImage;
     try {
       final data = await rootBundle.load('assets/logo.png');
       logoImage = pw.MemoryImage(data.buffer.asUint8List());
     } catch (_) {}
 
-    // Use end-of-day so same-day stats with timestamp are included
     final endOfDay = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
 
     final mediaSummaries = controller.mediaSummariesForClient(client.id, from: startDate, to: endOfDay);
@@ -75,7 +73,6 @@ class ReportPdfService {
     final totalSecs  = mediaSummaries.fold<int>(0, (s, m) => s + m.playTimeSeconds);
     final dateStr    = '${_fmt(startDate)} to ${_fmt(endDate)}';
 
-    // Screen breakdown
     final screenRows = <({ScreenDevice screen, int plays, int secs})>[];
     for (final screen in screens) {
       int p = 0, sec = 0;
@@ -146,7 +143,6 @@ class ReportPdfService {
               return db.isAfter(da) ? b : a;
             }
 
-            // Per-screen stats
             final byScreen = <String, ({int plays, String? last})>{};
             for (final stat in controller.playbackForMedia(item.id, from: startDate, to: endOfDay)) {
               final cur = byScreen[stat.screenId];
@@ -163,7 +159,6 @@ class ReportPdfService {
               screenLines.add('${screen.name}: ${stat.plays} plays  |  last: ${_fmtTs(stat.last)}');
             }
 
-            // Period breakdown — prefer playDate, fall back to lastPlayedAt date part
             final Map<String, int> periodPlays = {};
             for (final stat in controller.playbackForMedia(item.id, from: startDate, to: endOfDay)) {
               final raw = (stat.playDate != null && stat.playDate!.isNotEmpty)
@@ -172,7 +167,6 @@ class ReportPdfService {
               if (raw.isEmpty) continue;
               final parsed = DateTime.tryParse(raw);
               if (parsed == null) continue;
-              // Use IST (UTC+5:30)
               final ist = parsed.toUtc().add(const Duration(hours: 5, minutes: 30));
               final key = groupBy == ReportGroupBy.daily
                   ? '${ist.year}-${ist.month.toString().padLeft(2,'0')}-${ist.day.toString().padLeft(2,'0')}'
@@ -180,7 +174,6 @@ class ReportPdfService {
               periodPlays[key] = (periodPlays[key] ?? 0) + stat.playCount;
             }
 
-            // Fill in every period in the date range (0 plays for missing days/months)
             if (groupBy == ReportGroupBy.daily) {
               DateTime cursor = DateTime(startDate.year, startDate.month, startDate.day);
               final last = DateTime(endDate.year, endDate.month, endDate.day);
@@ -201,85 +194,77 @@ class ReportPdfService {
 
             final sortedPeriods = periodPlays.keys.toList()..sort();
 
-            widgets.add(
-              pw.Container(
-                padding: const pw.EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: pw.BoxDecoration(
-                  color: _navy,
-                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
-                ),
-                child: pw.Row(
-                  children: [
-                    pw.Expanded(
-                      child: pw.Text(
-                        '${item.kind == MediaKind.video ? 'VIDEO' : 'IMAGE'} ${i + 1}  �  ${item.title}',
-                        style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: _white),
-                      ),
-                    ),
-                    pw.SizedBox(width: 12),
-                    pw.Text(
-                      '${summary.playCount} plays  |  ${_dur(summary.playTimeSeconds)}',
-                      style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: _accentBlue),
-                    ),
-                  ],
-                ),
-              ),
-            );
-
-            if (screenLines.isNotEmpty) {
-              widgets.add(
-                pw.Padding(
-                  padding: const pw.EdgeInsets.fromLTRB(14, 8, 14, 0),
-                  child: pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: screenLines
-                        .map(
-                          (line) => pw.Padding(
-                            padding: const pw.EdgeInsets.only(bottom: 4),
-                            child: pw.Text(
-                              line,
-                              style: const pw.TextStyle(fontSize: 9, color: _textDark),
-                            ),
-                          ),
-                        )
-                        .toList(),
+            // Wrap all parts of this media item into one Column so MultiPage
+            // flows them together without leaving blank space before the table.
+            widgets.add(pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Container(
+                  padding: const pw.EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: pw.BoxDecoration(
+                    color: _navy,
+                    borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
                   ),
-                ),
-              );
-            }
-
-            if (sortedPeriods.isNotEmpty) {
-              widgets.add(
-                pw.Padding(
-                  padding: const pw.EdgeInsets.fromLTRB(14, 10, 14, 0),
-                  child: pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  child: pw.Row(
                     children: [
-                      pw.Text(
-                        groupBy == ReportGroupBy.daily ? 'Daily Breakdown' : 'Monthly Breakdown',
-                        style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold, color: _textMid),
+                      pw.Expanded(
+                        child: pw.Text(
+                          '${item.kind == MediaKind.video ? 'VIDEO' : 'IMAGE'} ${i + 1}    ${item.title}',
+                          style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: _white),
+                        ),
                       ),
-                      pw.SizedBox(height: 6),
-                      pw.Table.fromTextArray(
-                        headers: [groupBy == ReportGroupBy.daily ? 'DATE' : 'MONTH', 'PLAYS'],
-                        data: sortedPeriods
-                            .map((k) => [_formatPeriodKey(k, groupBy), '${periodPlays[k]}'])
-                            .toList(),
-                        headerStyle: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold, color: _white),
-                        headerDecoration: const pw.BoxDecoration(color: _blue),
-                        cellStyle: const pw.TextStyle(fontSize: 9, color: _textDark),
-                        oddRowDecoration: const pw.BoxDecoration(color: _rowAlt),
-                        border: pw.TableBorder.all(color: _borderGrey, width: 0.4),
-                        cellAlignments: {0: pw.Alignment.centerLeft, 1: pw.Alignment.center},
-                        cellPadding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                      pw.SizedBox(width: 12),
+                      pw.Text(
+                        '${summary.playCount} plays  |  ${_dur(summary.playTimeSeconds)}',
+                        style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: _accentBlue),
                       ),
                     ],
                   ),
                 ),
-              );
-            }
-
-            widgets.add(pw.SizedBox(height: 14));
+                if (screenLines.isNotEmpty)
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.fromLTRB(14, 8, 14, 0),
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: screenLines
+                          .map((line) => pw.Padding(
+                                padding: const pw.EdgeInsets.only(bottom: 4),
+                                child: pw.Text(line,
+                                    style: const pw.TextStyle(fontSize: 9, color: _textDark)),
+                              ))
+                          .toList(),
+                    ),
+                  ),
+                if (sortedPeriods.isNotEmpty)
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.fromLTRB(14, 10, 14, 0),
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text(
+                          groupBy == ReportGroupBy.daily ? 'Daily Breakdown' : 'Monthly Breakdown',
+                          style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold, color: _textMid),
+                        ),
+                        pw.SizedBox(height: 6),
+                        pw.Table.fromTextArray(
+                          headers: [groupBy == ReportGroupBy.daily ? 'DATE' : 'MONTH', 'PLAYS'],
+                          data: sortedPeriods
+                              .map((k) => [_formatPeriodKey(k, groupBy), '${periodPlays[k]}'])
+                              .toList(),
+                          headerStyle: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold, color: _white),
+                          headerDecoration: const pw.BoxDecoration(color: _blue),
+                          cellStyle: const pw.TextStyle(fontSize: 9, color: _textDark),
+                          oddRowDecoration: const pw.BoxDecoration(color: _rowAlt),
+                          border: pw.TableBorder.all(color: _borderGrey, width: 0.4),
+                          cellAlignments: {0: pw.Alignment.centerLeft, 1: pw.Alignment.center},
+                          cellPadding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                        ),
+                      ],
+                    ),
+                  ),
+                pw.SizedBox(height: 14),
+              ],
+            ));
           }
 
           widgets.add(pw.Container(
@@ -320,57 +305,54 @@ class ReportPdfService {
   }
 
   static pw.Widget _headerBar(pw.ImageProvider? logo, ClientProfile client, String dateStr) {
-    return pw.Container(
-      height: 130,
-      child: pw.Row(
-        crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-        children: [
-          pw.Container(
-            width: 180,
-            color: _white,
-            padding: const pw.EdgeInsets.all(16),
+    return pw.Row(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Container(
+          width: 180,
+          color: _white,
+          padding: const pw.EdgeInsets.all(16),
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            mainAxisAlignment: pw.MainAxisAlignment.center,
+            children: [
+              if (logo != null)
+                pw.Image(logo, width: 80, height: 44, fit: pw.BoxFit.contain)
+              else
+                pw.Text('BRAND SLOTS',
+                    style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: _navy)),
+              pw.SizedBox(height: 8),
+              pw.Text('THE SMARTEST WAY TO GROW YOUR BRAND',
+                  style: pw.TextStyle(fontSize: 6.5, fontWeight: pw.FontWeight.bold, color: _textMid)),
+            ],
+          ),
+        ),
+        pw.Expanded(
+          child: pw.Container(
+            color: _navy,
+            padding: const pw.EdgeInsets.fromLTRB(24, 16, 24, 16),
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               mainAxisAlignment: pw.MainAxisAlignment.center,
               children: [
-                if (logo != null)
-                  pw.Image(logo, width: 80, height: 44, fit: pw.BoxFit.contain)
-                else
-                  pw.Text('BRAND SLOTS',
-                      style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: _navy)),
-                pw.SizedBox(height: 8),
-                pw.Text('THE SMARTEST WAY TO GROW YOUR BRAND',
-                    style: pw.TextStyle(fontSize: 6.5, fontWeight: pw.FontWeight.bold, color: _textMid)),
+                pw.Text('TV ADVERTISEMENT',
+                    style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: _white)),
+                pw.Text('PLAYBACK REPORT',
+                    style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: _accentBlue)),
+                pw.SizedBox(height: 12),
+                pw.Text('PERIOD: $dateStr',
+                    style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold, color: _accentBlue)),
+                pw.SizedBox(height: 4),
+                pw.Text('CLIENT: ${client.name}',
+                    style: const pw.TextStyle(fontSize: 9, color: _white)),
+                if (client.contactName.isNotEmpty)
+                  pw.Text('CONTACT: ${client.contactName}',
+                      style: const pw.TextStyle(fontSize: 9, color: _white)),
               ],
             ),
           ),
-          pw.Expanded(
-            child: pw.Container(
-              color: _navy,
-              padding: const pw.EdgeInsets.fromLTRB(24, 16, 24, 16),
-              child: pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                mainAxisAlignment: pw.MainAxisAlignment.center,
-                children: [
-                  pw.Text('TV ADVERTISEMENT',
-                      style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: _white)),
-                  pw.Text('PLAYBACK REPORT',
-                      style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: _accentBlue)),
-                  pw.SizedBox(height: 12),
-                  pw.Text('PERIOD: $dateStr',
-                      style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold, color: _accentBlue)),
-                  pw.SizedBox(height: 4),
-                  pw.Text('CLIENT: ${client.name}',
-                      style: const pw.TextStyle(fontSize: 9, color: _white)),
-                  if (client.contactName.isNotEmpty)
-                    pw.Text('CONTACT: ${client.contactName}',
-                        style: const pw.TextStyle(fontSize: 9, color: _white)),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
